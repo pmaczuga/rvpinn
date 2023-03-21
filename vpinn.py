@@ -1,6 +1,6 @@
 import torch
 from functools import partial
-from src.io import save_result
+from src.io_utils import save_result
 from src.loss import compute_loss
 from src.pinn import PINN
 from src.train import train_model
@@ -31,8 +31,8 @@ def main():
         loss_fn=loss_fn, 
         learning_rate=params.learning_rate, 
         max_epochs=params.epochs, 
-        atol = 1e-22, 
-        rtol = 1e-22, 
+        atol = params.atol, 
+        rtol = params.rtol, 
         device=device, 
         best = params.use_best_pinn
     )

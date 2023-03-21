@@ -1,5 +1,5 @@
+from __future__ import annotations
 import configparser
-
 from src.utils import get_tag_path
 
 class Params:
@@ -44,14 +44,16 @@ class Params:
         self.beta               = config["Params"].getfloat("beta")
         self.n_points_x         = config["Params"].getint("n_points_x")
         self.n_test_func        = config["Params"].getint("n_test_func")
+        self.atol               = config["Params"].getfloat("atol")
+        self.rtol               = config["Params"].getfloat("rtol")
         self.tag                = config["Params"].get("tag")
 
     def save(self, filename: str):
         params = self.__dict__
         config = configparser.ConfigParser()
         config["Params"] = params
-        with open(filename, 'w') as configfile:    # save
-            config.write(configfile)
+        with open(filename, 'w') as f:
+            config.write(f)
 
     def save_by_tag(self):
         tag = self.tag
@@ -59,6 +61,6 @@ class Params:
         self.save(filename)
 
     @classmethod
-    def load_by_tag(cls, tag, **kwargs):
+    def load_by_tag(cls, tag, **kwargs) -> Params:
         filename = f"{get_tag_path(tag)}/params.ini"
         return cls(filename=filename, **kwargs)

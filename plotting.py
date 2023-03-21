@@ -5,7 +5,7 @@ import numpy as np
 import torch
 
 from src.params import Params
-from src.io import load_result
+from src.io_utils import load_result
 from src.pinn import dfdx, f
 
 matplotlib.rcParams['text.latex.preamble'] = [r'\usepackage{amsmath}']

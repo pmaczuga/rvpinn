@@ -11,7 +11,7 @@ def compute_loss(
     beta: float = 0.0,
     n_test_func: int = 50,
     device: torch.device = torch.device("cpu")
-) -> torch.float:
+) -> torch.Tensor:
     """Compute the full loss function as interior loss + boundary loss
     This custom loss function is fully defined with differentiable tensors therefore
     the .backward() method can be applied to it

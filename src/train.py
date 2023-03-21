@@ -1,5 +1,5 @@
 import copy
-from typing import Callable
+from typing import Callable, Tuple
 import numpy as np
 import torch
 
@@ -9,13 +9,13 @@ from src.pinn import PINN
 def train_model(
     pinn: PINN,
     loss_fn: Callable,
-    learning_rate: int = 0.01,
+    learning_rate: float = 0.01,
     max_epochs: int = 1_000,
-    atol: int = 0.0001,
-    rtol: int = 0.0001,
+    atol: float = 0.0001,
+    rtol: float = 0.0001,
     best: bool = False,
-    device="cpu"
-):
+    device: torch.device=torch.device("cpu")
+) -> Tuple[PINN, torch.Tensor]:
 
     optimizer = torch.optim.Adam(pinn.parameters(), lr=learning_rate)
     loss_vector = torch.zeros(max_epochs)

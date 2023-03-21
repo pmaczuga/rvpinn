@@ -21,7 +21,7 @@ class PINN(nn.Module):
         )
         self.act = act
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
 
         x_stack = torch.cat([x], dim=1)        
         out = self.act(self.layer_in(x_stack))
@@ -49,7 +49,7 @@ def df(output: torch.Tensor, input: torch.Tensor, order: int = 1) -> torch.Tenso
 
     return df_value
 
-def dfdx(pinn: PINN, x: torch.Tensor, order: int = 1):
+def dfdx(pinn: PINN, x: torch.Tensor, order: int = 1) -> torch.Tensor:
     """Derivative with respect to the spatial variable of arbitrary order"""
     f_value = f(pinn, x)
     return df(f_value, x, order=order)
