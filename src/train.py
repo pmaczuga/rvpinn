@@ -1,26 +1,26 @@
 import copy
-from typing import Callable, Tuple
-import numpy as np
+from typing import Tuple
 import torch
 
 from src.pinn import PINN
+from src.loss import Loss
 
 
 def train_model(
     pinn: PINN,
-    loss_fn: Callable,
+    loss_fn: Loss,
     learning_rate: float = 0.01,
     max_epochs: int = 1_000,
     atol: float = 0.0001,
     rtol: float = 0.0001,
-    best: bool = False,
-    device: torch.device=torch.device("cpu")
+    best: bool = False
 ) -> Tuple[PINN, torch.Tensor]:
 
     optimizer = torch.optim.Adam(pinn.parameters(), lr=learning_rate)
     loss_vector = torch.zeros(max_epochs)
     if best == True:
-      best_loss = 1e30
+      best_loss = torch.tensor(1e30)
+      best_epoch = 0
       best_nn = 0
       counter = -1
     

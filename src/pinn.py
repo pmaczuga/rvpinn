@@ -30,6 +30,9 @@ class PINN(nn.Module):
         logits = self.layer_out(out)
         
         return logits
+    
+    def get_device(self) -> torch.device:
+        return next(self.parameters()).device
 
 def f(pinn: PINN, x: torch.Tensor) -> torch.Tensor:
     """Compute the value of the approximate solution from the NN model"""

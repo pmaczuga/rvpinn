@@ -1,7 +1,6 @@
 import torch
-from functools import partial
 from src.io_utils import save_result
-from src.loss import compute_loss
+from src.loss import Loss
 from src.pinn import PINN
 from src.train import train_model
 
@@ -14,7 +13,7 @@ def main():
 
     print(f"Running on a device: {device}")
 
-    x_domain = [-1., 1.0]; n_points_x=params.n_points_x 
+    x_domain = [-1., 1.]; n_points_x=params.n_points_x 
     x_raw = torch.linspace(x_domain[0], x_domain[1], steps=n_points_x)
     x_raw.requires_grad_()
 
@@ -25,7 +24,7 @@ def main():
     # pinn = PINN(2, 5, act=nn.LeakyReLU()).to(device) # this is LeakyReLU
 
     # train the PINN
-    loss_fn = partial(compute_loss, x=x, n_test_func=params.n_test_func, device=device)
+    loss_fn = Loss.from_params(x, params)
     pinn, loss_vector = train_model(
         pinn, 
         loss_fn=loss_fn, 
@@ -33,9 +32,10 @@ def main():
         max_epochs=params.epochs, 
         atol = params.atol, 
         rtol = params.rtol, 
-        device=device, 
         best = params.use_best_pinn
     )
+
+    print(f"Loss at the end: {loss_vector[-1]}")
 
     save_result(pinn, loss_vector, params)
 

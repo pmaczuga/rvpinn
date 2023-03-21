@@ -1,48 +1,65 @@
+from __future__ import annotations
+
 import math
 import numpy as np
 import torch
 
-from src.pinn import dfdx, f
+from src.pinn import PINN, dfdx, f
+from src.params import Params
 
-def compute_loss(
-    pinn, 
-    x: torch.Tensor = None, 
-    eps: float = 1.0,
-    beta: float = 0.0,
-    n_test_func: int = 50,
-    device: torch.device = torch.device("cpu")
-) -> torch.Tensor:
-    """Compute the full loss function as interior loss + boundary loss
-    This custom loss function is fully defined with differentiable tensors therefore
-    the .backward() method can be applied to it
-    """
+class Loss:
+    def __init__(
+         self, 
+         x: torch.Tensor,
+         eps: float,
+         beta: float,
+         n_test_func: int
+    ):
+        self.x = x
+        self.eps = eps
+        self.beta = beta
+        self.n_test_func = n_test_func
 
-    dx=1.0/len(x)
+    def __call__(self, pinn: PINN) -> torch.Tensor:
+        """Compute the full loss function as interior loss + boundary loss
+        This custom loss function is fully defined with differentiable tensors therefore
+        the .backward() method can be applied to it
+        """
+        x = self.x
+        eps = self.eps
+        beta = self.beta
+        n_test_func = self.n_test_func
+        device = pinn.get_device()
 
-    Xd = 0.5  #np.sqrt(2)/2
-   
-    final_loss=0.0
+        dx=1.0/len(x)
+
+        Xd = 0.5  #np.sqrt(2)/2
     
-    val = dfdx(pinn, x, order=1)
-    interior_loss_trial1 = eps*val
+        final_loss=0.0
+        
+        val = dfdx(pinn, x, order=1)
+        interior_loss_trial1 = eps*val
 
-    for n in range(1, n_test_func):
-      
-      interior_loss_test1 = n * math.pi/2 * torch.cos(n*math.pi*(x+1)/2)
-      interior_loss = interior_loss_trial1.mul(interior_loss_test1)
-      interior_loss = torch.trapz(interior_loss.reshape(1,-1).to(device),dx=dx).to(device).sum()-np.sin(n*math.pi*(Xd+1)/2)
-      # update the final MSE loss 
-      final_loss+= 4/(eps*(n*math.pi)**2)*interior_loss.pow(2) 
+        for n in range(1, n_test_func):
+            interior_loss_test1 = n * math.pi/2 * torch.cos(n*math.pi*(x+1)/2)
+            interior_loss = interior_loss_trial1.mul(interior_loss_test1)
+            interior_loss = torch.trapz(interior_loss.reshape(1,-1).to(device),dx=dx).to(device).sum()-np.sin(n*math.pi*(Xd+1)/2)
+            # update the final MSE loss 
+            final_loss+= 4/(eps*(n*math.pi)**2)*interior_loss.pow(2) 
 
-    boundary_xi = x[0].reshape(-1, 1) #first point = 0
-    boundary_loss_xi = f(pinn, boundary_xi)
+        boundary_xi = x[0].reshape(-1, 1) #first point = 0
+        boundary_loss_xi = f(pinn, boundary_xi)
 
 
-    boundary_xf = x[-1].reshape(-1, 1) #last point = 1
-    boundary_loss_xf = f(pinn, boundary_xf)
+        boundary_xf = x[-1].reshape(-1, 1) #last point = 1
+        boundary_loss_xf = f(pinn, boundary_xf)
+        
+        
+        final_loss+= \
+            (1)*boundary_loss_xi.pow(2).mean() + \
+            (1)*boundary_loss_xf.pow(2).mean() 
+        return final_loss
     
-    
-    final_loss+= \
-        (1)*boundary_loss_xi.pow(2).mean() + \
-        (1)*boundary_loss_xf.pow(2).mean() 
-    return final_loss
+    @classmethod
+    def from_params(cls, x: torch.Tensor, params: Params) -> Loss:
+        return cls(x=x, eps = params.eps, beta = params.beta, n_test_func = params.n_test_func)

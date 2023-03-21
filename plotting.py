@@ -11,11 +11,11 @@ from src.pinn import dfdx, f
 matplotlib.rcParams['text.latex.preamble'] = [r'\usepackage{amsmath}']
 
 # Here you can set tag - that is directory inside results where the 
-tag = "tmp"
+# tag = "tmp"
 # Alternatively you can take tag from params.ini in root:
-# tag = Params().tag
+tag = Params().tag
 
-# Here is trained pinn, loss vector and parameters used in here
+# Here is trained pinn, loss vector and parameters
 pinn, loss_vector, params = load_result(tag)
 
 
@@ -29,6 +29,7 @@ y_draw = f(pinn, x).flatten()
 Xd = 0.5#np.sqrt(2)/2
 xnp1=np.linspace(-1,Xd,100)
 xnp2=np.linspace(Xd,1,100)
+
 y_ana_np1 = (1-Xd)*(xnp1+1) #(1-np.exp((xnp-1)/eps))/(1-np.exp(-1/eps)) + xnp - 1#(np.exp(1/eps)-np.exp((xnp)/eps))/(np.exp(1/eps) -1)
 y_ana_np2 = (Xd+1)*(1-xnp2)
 
