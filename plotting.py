@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib.pyplot import draw, figure, show
 import numpy as np
 import torch
+from src.analytical import AnalyticalDelta, analytical_from_params
 
 from src.params import Params
 from src.io_utils import load_result
@@ -23,16 +24,16 @@ x_domain = [-1., 1.0]; n_points_x=params.n_points_x
 x_raw = torch.linspace(x_domain[0], x_domain[1], steps=n_points_x)
 x_raw.requires_grad_()
 x = x_raw.reshape(-1, 1)
-x_draw = x.flatten()
+x_draw = x.flatten().detach()
 y_draw = f(pinn, x).flatten()
 #y_ana = (1-torch.exp((x_draw-1)/eps))/(1-np.exp(-1/eps)) + x_draw -1
-Xd = 0.5#np.sqrt(2)/2
-xnp1=np.linspace(-1,Xd,100)
-xnp2=np.linspace(Xd,1,100)
 
-y_ana_np1 = (1-Xd)*(xnp1+1) #(1-np.exp((xnp-1)/eps))/(1-np.exp(-1/eps)) + xnp - 1#(np.exp(1/eps)-np.exp((xnp)/eps))/(np.exp(1/eps) -1)
-y_ana_np2 = (Xd+1)*(1-xnp2)
+# y_ana_np1 = 1/params.eps*(1-Xd)*(xnp1+1) #(1-np.exp((xnp-1)/eps))/(1-np.exp(-1/eps)) + xnp - 1#(np.exp(1/eps)-np.exp((xnp)/eps))/(np.exp(1/eps) -1)
+# y_ana_np2 = 1/params.eps*(Xd+1)*(1-xnp2)
 
+# x_d = torch.linspace
+analytical = analytical_from_params(params)
+y_ana_np = analytical(x_draw)
 
 matplotlib.rc('text', usetex=True)
 
@@ -41,8 +42,10 @@ matplotlib.rc('font', **font)
 
 fig, ax = plt.subplots() #figure(figsize=(7, 7))
 ax.plot(x_draw.detach().cpu(), y_draw.detach().cpu(),'b-', label = 'DRVPINNs',linewidth = 2)
-ax.plot(xnp1, y_ana_np1,'r--',linewidth = 2)
-ax.plot(xnp2, y_ana_np2,'r--', label = 'Analytical',linewidth = 2)
+# ax.plot(xnp1, y_ana_np1,'r--',linewidth = 2)
+# ax.plot(xnp2, y_ana_np2,'r--', label = 'Analytical',linewidth = 2)
+ax.plot(x_draw, y_ana_np, 'r--', label="Analytical", linewidth=2)
+
 ax.legend(loc='upper left')#, fontsize='x-large')
 #plt.plot(x_draw.detach().cpu(), y_ana.detach().cpu(),'r--')
 ax.set_xlabel(r" $x$ ", size = 22)

@@ -3,7 +3,7 @@ from typing import Tuple
 import torch
 
 from src.pinn import PINN
-from src.loss import Loss
+from src.loss.loss import Loss
 
 
 def train_model(
@@ -21,7 +21,6 @@ def train_model(
     if best == True:
       best_loss = torch.tensor(1e30)
       best_epoch = 0
-      best_nn = 0
       counter = -1
     
     for epoch in range(max_epochs):

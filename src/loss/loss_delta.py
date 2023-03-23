@@ -4,30 +4,26 @@ import math
 import numpy as np
 import torch
 
+from src.loss.loss import Loss
 from src.pinn import PINN, dfdx, f
 from src.params import Params
 
-class Loss:
+class LossDelta(Loss):
     def __init__(
          self, 
          x: torch.Tensor,
          eps: float,
-         beta: float,
          n_test_func: int
     ):
         self.x = x
         self.eps = eps
-        self.beta = beta
         self.n_test_func = n_test_func
 
+
+    # Allows to call object as function
     def __call__(self, pinn: PINN) -> torch.Tensor:
-        """Compute the full loss function as interior loss + boundary loss
-        This custom loss function is fully defined with differentiable tensors therefore
-        the .backward() method can be applied to it
-        """
         x = self.x
         eps = self.eps
-        beta = self.beta
         n_test_func = self.n_test_func
         device = pinn.get_device()
 
@@ -35,7 +31,7 @@ class Loss:
 
         Xd = 0.5  #np.sqrt(2)/2
     
-        final_loss=0.0
+        final_loss = 0.0
         
         val = dfdx(pinn, x, order=1)
         interior_loss_trial1 = eps*val
@@ -61,5 +57,5 @@ class Loss:
         return final_loss
     
     @classmethod
-    def from_params(cls, x: torch.Tensor, params: Params) -> Loss:
-        return cls(x=x, eps = params.eps, beta = params.beta, n_test_func = params.n_test_func)
+    def from_params(cls, x: torch.Tensor, params: Params) -> LossDelta:
+        return cls(x=x, eps = params.eps, n_test_func = params.n_test_func)
