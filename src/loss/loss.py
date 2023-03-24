@@ -25,5 +25,5 @@ class Loss(ABC):
         >>> loss(pinn)                      # <-- You can do this
     """
 
-    def __apply__(self, pinn: PINN) -> torch.Tensor:
+    def __call__(self, pinn: PINN) -> torch.Tensor:
         raise NotImplementedError()

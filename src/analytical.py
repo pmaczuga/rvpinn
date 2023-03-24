@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC
+import numpy as np
 
 import torch
 
@@ -34,21 +35,35 @@ class AnalyticalAD(Analytical):
     
 
 class AnalyticalDelta(Analytical):
-    def __init__(self, eps:float, Xd: float):
+    def __init__(self, eps: float, Xd: float):
         self.eps = eps
         self.Xd = Xd
 
+    # TODO - check
     def __call__(self, x: torch.Tensor):
-        x_left = (x <= self.Xd)
-        x_right = (x > self.Xd)
-        y_ana_np1 = 1/self.eps*(1-self.Xd)*(x+1) #(1-np.exp((xnp-1)/eps))/(1-np.exp(-1/eps)) + xnp - 1#(np.exp(1/eps)-np.exp((xnp)/eps))/(np.exp(1/eps) -1)
-        y_ana_np2 = 1/self.eps*(self.Xd+1)*(1-x)
-        return  x_left * y_ana_np1 + x_right * y_ana_np2
+        Xd = self.Xd
+        x_left = (x <= Xd)
+        x_right = (x > Xd)
+        return  x_left * self.left(x) + x_right * self.right(x)
+
+    def left(self, x:torch.Tensor):
+        return 1/(2*self.eps)*(1-self.Xd)*(x+1)
+
+    def right(self, x: torch.Tensor):
+        return 1/(2*self.eps)*(self.Xd+1)*(1-x)
 
     def dx(self, x):
-        x_left = (x <= self.Xd)
-        x_right = (x > self.Xd)
-        return x_left * 1/self.eps * (1 - self.Xd) - x_right * 1/self.eps * (self.Xd + 1)
+        Xd = self.Xd
+        eps = self.eps
+        x_left = (x <= Xd)
+        x_right = (x > Xd)
+        return x_left * self.left_dx(x) + x_right * self.right_dx(x)
+
+    def left_dx(self, x: torch.Tensor):
+        return x*0 + (1/(2*self.eps) * (1 - self.Xd))
+
+    def right_dx(self, x: torch.Tensor):
+        return x*0 - (1/(2*self.eps) * (self.Xd + 1))
 
     @classmethod
     def from_params(cls, params: Params) -> AnalyticalDelta:

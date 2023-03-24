@@ -17,8 +17,10 @@ matplotlib.rcParams['text.latex.preamble'] = [r'\usepackage{amsmath}']
 tag = Params().tag
 
 # Here is trained pinn, loss vector and parameters
-pinn, loss_vector, params = load_result(tag)
-
+pinn, result, params = load_result(tag)
+loss_vector = result.loss
+error_vector = result.error
+norm_vector = result.norm
 
 x_domain = [-1., 1.0]; n_points_x=params.n_points_x 
 x_raw = torch.linspace(x_domain[0], x_domain[1], steps=n_points_x)
@@ -80,6 +82,21 @@ fig, ax = plt.subplots()
 ax.loglog(pos_vec, best_vec,'b-',linewidth = 2)
 ax.set_xlabel(r" Iterations ", size = 22)
 ax.set_ylabel(r" Relative loss ", size = 22)
-ax.set_ylim([1e-6,2])
+ax.set_ylim(1e-6, 2.0)
+
+###########################################################
+
+fig, ax = plt.subplots()
+ax.loglog(error_vector, 'b-', linewidth=2)
+ax.set_title("Error")
+ax.set_xlabel(r" Iterations ", size = 22)
+ax.set_ylabel(r" Error ", size = 22)
+
+
+fig, ax = plt.subplots()
+ax.loglog(norm_vector, 'b-', linewidth=2)
+ax.set_title("Norm")
+ax.set_xlabel(r" Iterations ", size = 22)
+ax.set_ylabel(r" Norm ", size = 22)
 
 show()

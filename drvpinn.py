@@ -3,6 +3,7 @@ from src.loss.factory import loss_from_params
 from src.io_utils import save_result
 from src.pinn import PINN
 from src.train import train_model
+from src.nn_error import nn_error_from_params
 
 from src.utils import *
 from src.params import Params
@@ -25,19 +26,26 @@ def main():
 
     # train the PINN
     loss_fn = loss_from_params(x, params)
-    pinn, loss_vector = train_model(
+    result = train_model(
         pinn, 
         loss_fn=loss_fn, 
         learning_rate=params.learning_rate, 
         max_epochs=params.epochs, 
         atol = params.atol, 
         rtol = params.rtol, 
-        best = params.use_best_pinn
+        best = params.use_best_pinn,
+        nn_error = nn_error_from_params(params) if params.compute_error else None
     )
 
-    print(f"Loss at the end: {loss_vector[-1]}")
+    loss_vector = result.loss
+    error_vector = result.error
+    norm_vector = result.norm
 
-    save_result(pinn, loss_vector, params)
+    print(f"Loss at the end: {loss_vector[-1]}")
+    print(f"Error at the end: {error_vector[-1]}")
+    print(f"Norm at the end: {norm_vector[-1]}")
+
+    save_result(pinn, result, params)
 
 if __name__ == '__main__':
     main()

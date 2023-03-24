@@ -28,7 +28,7 @@ class LossAD(Loss):
         device = pinn.get_device()
 
         beta = 1
-        dx=1.0/len(x)
+        dx=2.0/len(x)
 
         final_loss=0.0
     

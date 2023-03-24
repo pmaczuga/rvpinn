@@ -13,10 +13,12 @@ class LossDelta(Loss):
          self, 
          x: torch.Tensor,
          eps: float,
+         Xd: float,
          n_test_func: int
     ):
         self.x = x
         self.eps = eps
+        self.Xd = Xd
         self.n_test_func = n_test_func
 
 
@@ -24,14 +26,13 @@ class LossDelta(Loss):
     def __call__(self, pinn: PINN) -> torch.Tensor:
         x = self.x
         eps = self.eps
+        Xd = self.Xd
         n_test_func = self.n_test_func
         device = pinn.get_device()
 
-        dx=1.0/len(x)
-
-        Xd = 0.5  #np.sqrt(2)/2
+        dx=2.0/len(x)
     
-        final_loss = 0.0
+        final_loss = torch.tensor(0.0)
         
         val = dfdx(pinn, x, order=1)
         interior_loss_trial1 = eps*val
@@ -39,7 +40,7 @@ class LossDelta(Loss):
         for n in range(1, n_test_func):
             interior_loss_test1 = n * math.pi/2 * torch.cos(n*math.pi*(x+1)/2)
             interior_loss = interior_loss_trial1.mul(interior_loss_test1)
-            interior_loss = torch.trapz(interior_loss.reshape(1,-1).to(device),dx=dx).to(device).sum()-np.sin(n*math.pi*(Xd+1)/2)
+            interior_loss = torch.trapz(interior_loss.reshape(1,-1).to(device), dx=dx).to(device).sum()-np.sin(n*math.pi*(Xd+1)/2)
             # update the final MSE loss 
             final_loss+= 4/(eps*(n*math.pi)**2)*interior_loss.pow(2) 
 
@@ -50,7 +51,6 @@ class LossDelta(Loss):
         boundary_xf = x[-1].reshape(-1, 1) #last point = 1
         boundary_loss_xf = f(pinn, boundary_xf)
         
-        
         final_loss+= \
             (1)*boundary_loss_xi.pow(2).mean() + \
             (1)*boundary_loss_xf.pow(2).mean() 
@@ -58,4 +58,4 @@ class LossDelta(Loss):
     
     @classmethod
     def from_params(cls, x: torch.Tensor, params: Params) -> LossDelta:
-        return cls(x=x, eps = params.eps, n_test_func = params.n_test_func)
+        return cls(x, params.eps, params.Xd, params.n_test_func)

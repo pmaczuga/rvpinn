@@ -1,9 +1,12 @@
 import copy
 from typing import Tuple
+import numpy as np
 import torch
 
+from src.nn_error import NNError
 from src.pinn import PINN
 from src.loss.loss import Loss
+from src.utils import TrainResult
 
 
 def train_model(
@@ -13,11 +16,15 @@ def train_model(
     max_epochs: int = 1_000,
     atol: float = 0.0001,
     rtol: float = 0.0001,
-    best: bool = False
-) -> Tuple[PINN, torch.Tensor]:
+    best: bool = False,
+    nn_error = None
+) -> TrainResult:
 
     optimizer = torch.optim.Adam(pinn.parameters(), lr=learning_rate)
-    loss_vector = torch.zeros(max_epochs)
+    loss_vector = np.zeros(max_epochs)
+    if nn_error:
+       error_vector = np.zeros(max_epochs)
+       norm_vector = np.zeros(max_epochs)
     if best == True:
       best_loss = torch.tensor(1e30)
       best_epoch = 0
@@ -29,6 +36,9 @@ def train_model(
 
             loss: torch.Tensor = loss_fn(pinn)
             loss_vector[epoch] = float(loss)
+            if nn_error:
+               error_vector[epoch] = nn_error.error(pinn)
+               norm_vector[epoch] = nn_error.norm(pinn)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
@@ -70,4 +80,7 @@ def train_model(
         pinn.load_state_dict(state_dict)
         final_loss : torch.Tensor = loss_fn(pinn)
         print(f" Best Epoch: {best_epoch:>05d} - Best Loss: {final_loss:>.15f} - Relative Best Loss: {final_loss/loss0:>.15f}  ")
-    return pinn, loss_vector
+    
+    if nn_error:
+       return TrainResult(loss_vector, error_vector, norm_vector)
+    return TrainResult(loss_vector)
