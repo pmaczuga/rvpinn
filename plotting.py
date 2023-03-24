@@ -1,3 +1,4 @@
+import argparse
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import draw, figure, show
@@ -11,10 +12,17 @@ from src.pinn import dfdx, f
 
 matplotlib.rcParams['text.latex.preamble'] = [r'\usepackage{amsmath}']
 
+
+parser = argparse.ArgumentParser(
+                    prog='DRVPINN',
+                    description='Runs the training of DRVPINN')
+parser.add_argument('--tag', type=str)
+args = parser.parse_args()
+
 # Here you can set tag - that is directory inside results where the 
 # tag = "tmp"
 # Alternatively you can take tag from params.ini in root:
-tag = Params().tag
+tag = args.tag if args.tag is not None else Params().tag
 
 # Here is trained pinn, loss vector and parameters
 pinn, result, params = load_result(tag)
@@ -86,17 +94,18 @@ ax.set_ylim(1e-6, 2.0)
 
 ###########################################################
 
-fig, ax = plt.subplots()
-ax.loglog(error_vector, 'b-', linewidth=2)
-ax.set_title("Error")
-ax.set_xlabel(r" Iterations ", size = 22)
-ax.set_ylabel(r" Error ", size = 22)
+if error_vector is not None:
+  fig, ax = plt.subplots()
+  ax.loglog(error_vector, 'b-', linewidth=2)
+  ax.set_title("Error")
+  ax.set_xlabel(r" Iterations ", size = 22)
+  ax.set_ylabel(r" Error ", size = 22)
 
-
-fig, ax = plt.subplots()
-ax.loglog(norm_vector, 'b-', linewidth=2)
-ax.set_title("Norm")
-ax.set_xlabel(r" Iterations ", size = 22)
-ax.set_ylabel(r" Norm ", size = 22)
+if norm_vector is not None:
+  fig, ax = plt.subplots()
+  ax.loglog(norm_vector, 'b-', linewidth=2)
+  ax.set_title("Norm")
+  ax.set_xlabel(r" Iterations ", size = 22)
+  ax.set_ylabel(r" Norm ", size = 22)
 
 show()

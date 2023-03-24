@@ -35,21 +35,37 @@ class Params:
     def __init__(self, filename="params.ini", **kwargs):
         config = configparser.ConfigParser()
         config.read(filename)
-        self.epochs             = config["Params"].getint("epochs")
-        self.layers             = config["Params"].getint("layers")
-        self.neurons_per_layer  = config["Params"].getint("neurons_per_layer")
-        self.learning_rate      = config["Params"].getfloat("learning_rate")
-        self.use_best_pinn      = config["Params"].getboolean("use_best_pinn")
-        self.equation           = config["Params"].get("equation")
-        self.eps                = config["Params"].getfloat("eps")
-        self.Xd                 = config["Params"].getfloat("Xd")
-        self.compute_error      = config["Params"].getboolean("compute_error")
-        self.n_points_x         = config["Params"].getint("n_points_x")
-        self.n_points_error     = config["Params"].getint("n_points_error")
-        self.n_test_func        = config["Params"].getint("n_test_func")
-        self.atol               = config["Params"].getfloat("atol")
-        self.rtol               = config["Params"].getfloat("rtol")
-        self.tag                = config["Params"].get("tag")
+        self.epochs             = self._getint("epochs", config, **kwargs)
+        self.layers             = self._getint("layers", config, **kwargs)
+        self.neurons_per_layer  = self._getint("neurons_per_layer", config, **kwargs)
+        self.learning_rate      = self._getfloat("learning_rate", config, **kwargs)
+        self.use_best_pinn      = self._getboolean("use_best_pinn", config, **kwargs)
+        self.equation           = self._getstr("equation", config, **kwargs)
+        self.eps                = self._getfloat("eps", config, **kwargs)
+        self.Xd                 = self._getfloat("Xd", config, **kwargs)
+        self.compute_error      = self._getboolean("compute_error", config, **kwargs)
+        self.n_points_x         = self._getint("n_points_x", config, **kwargs)
+        self.n_points_error     = self._getint("n_points_error", config, **kwargs)
+        self.n_test_func        = self._getint("n_test_func", config, **kwargs)
+        self.atol               = self._getfloat("atol", config, **kwargs)
+        self.rtol               = self._getfloat("rtol", config, **kwargs)
+        self.tag                = self._getstr("tag", config, **kwargs)
+
+    def _getstr(self, name: str, config: configparser.ConfigParser, **kwargs):
+        config_value = config["Params"].get(name)
+        return kwargs.get(name, config_value)
+
+    def _getfloat(self, name: str, config: configparser.ConfigParser, **kwargs):
+        config_value = config["Params"].getfloat(name)
+        return kwargs.get(name, config_value)
+    
+    def _getint(self, name: str, config: configparser.ConfigParser, **kwargs):
+        config_value = config["Params"].getint(name)
+        return kwargs.get(name, config_value)
+
+    def _getboolean(self, name: str, config: configparser.ConfigParser, **kwargs):
+        config_value = config["Params"].getboolean(name)
+        return kwargs.get(name, config_value)
 
     def save(self, filename: str):
         params = self.__dict__
