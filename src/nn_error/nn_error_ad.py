@@ -68,3 +68,23 @@ class NNErrorAD(NNError):
             final_loss+= 4/(eps*(n*math.pi)**2)*interior_loss**2
 
         return final_loss
+    
+    def prepare_x(self, n_points_error: int, device: torch.device = torch.device("cpu")):
+        x = torch.linspace(0.0, 1.0, n_points_error)
+        
+        # Function that grows from 0 to 1
+        # The bigger the p, the slower it grows towards the end
+        # When p = 1, then it becomes f(x) = x
+        distr = lambda x, p: -(-x+1)**p + 1
+
+        # When eps = 0.1, p is about 3
+        # When eps = 0.01, p is about 6
+        # Condition is to make it at least 1
+        # p = -np.log2(self.eps) if self.eps < 0.5 else 1
+
+        real_x = distr(x, 2) * 2.0 - 1.0        # x is from 0 to 1, our domain is -1 to 1
+        real_x = real_x.reshape(-1, 1).to(device)
+        real_x.requires_grad = True
+
+        return real_x
+    
