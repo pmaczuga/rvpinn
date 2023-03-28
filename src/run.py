@@ -11,15 +11,11 @@ from src.params import Params
 def run(params, device):
     print(f"Running on a device: {device}")
 
-    x_domain = [-1., 1.]; n_points_x=params.n_points_x 
-    x_raw = torch.linspace(x_domain[0], x_domain[1], steps=n_points_x)
+    x_raw = torch.linspace(-1.0, 1.0, steps=params.n_points_x)
     x_raw.requires_grad_()
-
     x = x_raw.reshape(-1, 1).to(device)
 
-    pinn = PINN(params.layers, params.neurons_per_layer).to(device) # this is hyperbolic tangent
-    # pinn = PINN(5, 25, act=nn.ReLU()).to(device)
-    # pinn = PINN(2, 5, act=nn.LeakyReLU()).to(device) # this is LeakyReLU
+    pinn = PINN(params.layers, params.neurons_per_layer).to(device)
 
     # train the PINN
     loss_fn = loss_from_params(x, params)
@@ -39,8 +35,9 @@ def run(params, device):
     norm_vector = result.norm
 
     print(f"Loss at the end: {loss_vector[-1]}")
-    print(f"Error at the end: {error_vector[-1]}")
-    print(f"Norm at the end: {norm_vector[-1]}")
+    if error_vector is not None:
+        print(f"Error at the end: {error_vector[-1]}")
+    if norm_vector is not None:
+        print(f"Norm at the end: {norm_vector[-1]}")
 
     save_result(pinn, result, params)
-

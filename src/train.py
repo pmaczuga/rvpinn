@@ -1,9 +1,8 @@
 import copy
-from typing import Tuple
 import numpy as np
 import torch
-
 from src.nn_error import NNError
+
 from src.pinn import PINN
 from src.loss.loss import Loss
 from src.utils import TrainResult
@@ -17,14 +16,14 @@ def train_model(
     atol: float = 0.0001,
     rtol: float = 0.0001,
     best: bool = False,
-    nn_error = None
+    nn_error: NNError | None = None
 ) -> TrainResult:
 
     optimizer = torch.optim.Adam(pinn.parameters(), lr=learning_rate)
-    loss_vector = np.zeros(max_epochs)
+    loss_vector = torch.zeros(max_epochs)
     if nn_error:
-       error_vector = np.zeros(max_epochs)
-       norm_vector = np.zeros(max_epochs)
+       error_vector = torch.zeros(max_epochs)
+       norm_vector = torch.zeros(max_epochs)
     if best == True:
       best_loss = torch.tensor(1e30)
       best_epoch = 0

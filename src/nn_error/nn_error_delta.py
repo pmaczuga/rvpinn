@@ -39,10 +39,9 @@ class NNErrorDelta(NNError):
         up2 = integrate.simpson(up2, x=x2)
 
         up = up1 + up2
-        x = u1[0]
         down = u1[0].item()**2*(Xd - 1.0) + u2[0].item()**2*(1.0 - Xd)
 
-        return np.sqrt(up) / np.sqrt(down)
+        return math.sqrt(up) / math.sqrt(down)
 
     def norm(self, pinn: PINN) -> float:
         eps = self.eps

@@ -9,9 +9,9 @@ def get_tag_path(tag: str) -> str:
 
 class TrainResult:
    def __init__(self, 
-                loss: np.ndarray, 
-                error: np.ndarray | None = None,
-                norm: np.ndarray | None = None):
+                loss: torch.Tensor, 
+                error: torch.Tensor | None = None,
+                norm: torch.Tensor | None = None):
       self.loss = loss
       self.error = error
       self.norm = norm

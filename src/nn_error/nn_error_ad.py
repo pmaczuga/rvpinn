@@ -32,7 +32,7 @@ class NNErrorAD(NNError):
         up   = integrate.simpson(up, x=x)
         down = integrate.simpson(down, x=x)
 
-        return np.sqrt(up) / np.sqrt(down)
+        return math.sqrt(up) / math.sqrt(down)
 
     def norm(self, pinn: PINN) -> float:
         eps = self.eps
@@ -65,7 +65,7 @@ class NNErrorAD(NNError):
 
             interior_loss = val1 + val2 - val3
             # update the final MSE loss 
-            final_loss+= 4/(eps*(n*math.pi)**2)*interior_loss**2
+            final_loss += 4/(eps*(n*math.pi)**2)*interior_loss**2
 
         return final_loss
     
@@ -77,6 +77,7 @@ class NNErrorAD(NNError):
         # When p = 1, then it becomes f(x) = x
         distr = lambda x, p: -(-x+1)**p + 1
 
+        # NOTE: 4 lines below are currently not used
         # When eps = 0.1, p is about 3
         # When eps = 0.01, p is about 6
         # Condition is to make it at least 1
