@@ -2,6 +2,7 @@ import math
 from typing import Tuple
 import numpy as np
 import torch
+from src.integration import midpoint_int
 from src.analytical import AnalyticalDelta
 from src.pinn import PINN, dfdx
 from src.nn_error import NNError
@@ -21,25 +22,29 @@ class NNErrorDelta(NNError):
         device = pinn.get_device()
         x1, x2 = self.prepare_twin_x(n_points_error, Xd, device)
         analytical = AnalyticalDelta(eps, Xd)
-        val1 = dfdx(pinn, x1, order=1)
-        val2 = dfdx(pinn, x2, order=1)
+
+        def up1_f(x):
+            val = dfdx(pinn, x, order=1)
+            u = analytical.left_dx(x)
+            return (u - val)**2
         
-        u1 = analytical.left_dx(x1)
-        u2 = analytical.right_dx(x2)
+        def up2_f(x):
+            val = dfdx(pinn, x, order=1)
+            u = analytical.right_dx(x)
+            return (u-val)**2
 
-        up1 = (u1 - val1)**2
-        up2 = (u2 - val2)**2
-    
-        up1 = up1.flatten().detach()
-        up2 = up2.flatten().detach()
-        x1 = x1.detach().flatten()
-        x2 = x2.detach().flatten()
+        x1 = x1
+        x2 = x2
 
-        up1 = integrate.simpson(up1, x=x1)
-        up2 = integrate.simpson(up2, x=x2)
+        up1 = midpoint_int(up1_f, x=x1).detach().flatten()
+        up2 = midpoint_int(up2_f, x=x2).detach().flatten()
+
+        # It is constant
+        u1 = analytical.left_dx(x1)[0].item()
+        u2 = analytical.right_dx(x1)[0].item()
 
         up = up1 + up2
-        down = u1[0].item()**2*(Xd - 1.0) + u2[0].item()**2*(1.0 - Xd)
+        down = u1**2*(Xd - 1.0) + u2**2*(1.0 - Xd)
 
         return math.sqrt(up) / math.sqrt(down)
 
