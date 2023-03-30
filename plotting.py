@@ -64,13 +64,13 @@ ax.set_ylabel(r" $u$ ", size = 22)
 ##########################################################################
 
 figure(figsize=(10, 10))
-delta_approx = -dfdx(pinn, x, order=2)
+delta_approx = dfdx(pinn, x, order=1)
 plt.plot(x_draw.detach().cpu(), delta_approx.detach().cpu(),'b-')
 #plt.semilogy(x_draw.detach().cpu(), abs(y_ana.detach().cpu()-y_draw.detach().cpu()),'b-')
 
 ##########################################################################
 
-vec = loss_vector/loss_vector[0]
+vec = loss_vector
 best = 1
 best_vec = [1.]
 pos_vec = [1.]
@@ -83,29 +83,39 @@ for n in range(1,params.epochs):
     pos_vec.append(n+1)
     best = 1*vec[n]
 
-#print(vec)
-
+pos_vec = np.array(pos_vec, dtype=int) - 1
 
 fig, ax = plt.subplots()
-ax.loglog(pos_vec, best_vec,'b-',linewidth = 2)
+ax.loglog(pos_vec, loss_vector[pos_vec],'b-',linewidth = 2, label="Loss")
+ax.loglog(pos_vec, norm_vector[pos_vec], 'r--', linewidth=2, label="Norm")
+ax.legend()
 ax.set_xlabel(r" Iterations ", size = 22)
-ax.set_ylabel(r" Relative loss ", size = 22)
-ax.set_ylim(1e-6, 2.0)
+ax.set_ylabel(r" Loss ", size = 22)
+
+fig, ax = plt.subplots()
+ax.loglog(pos_vec, error_vector[pos_vec], 'g-', linewidth=2, label="Error")
+ax.set_xlabel(r" Iterations ", size = 22)
+ax.set_ylabel(r" Loss ", size = 22)
+ax.set_title("Error")
 
 ###########################################################
 
-if error_vector is not None:
-  fig, ax = plt.subplots()
-  ax.loglog(error_vector, 'b-', linewidth=2)
-  ax.set_title("Error")
-  ax.set_xlabel(r" Iterations ", size = 22)
-  ax.set_ylabel(r" Error ", size = 22)
+fig, ax = plt.subplots()
+ax.loglog(np.sqrt(loss_vector[pos_vec]), error_vector[pos_vec])
+ax.loglog(np.sqrt(loss_vector[pos_vec]), np.sqrt(loss_vector[pos_vec]))
 
-if norm_vector is not None:
-  fig, ax = plt.subplots()
-  ax.loglog(norm_vector, 'b-', linewidth=2)
-  ax.set_title("Norm")
-  ax.set_xlabel(r" Iterations ", size = 22)
-  ax.set_ylabel(r" Norm ", size = 22)
+# if error_vector is not None:
+#   fig, ax = plt.subplots()
+#   ax.loglog(error_vector, 'b-', linewidth=2)
+#   ax.set_title("Error")
+#   ax.set_xlabel(r" Iterations ", size = 22)
+#   ax.set_ylabel(r" Error ", size = 22)
+
+# if norm_vector is not None:
+#   fig, ax = plt.subplots()
+#   ax.loglog(norm_vector, 'b-', linewidth=2)
+#   ax.set_title("Norm")
+#   ax.set_xlabel(r" Iterations ", size = 22)
+#   ax.set_ylabel(r" Norm ", size = 22)
 
 show()

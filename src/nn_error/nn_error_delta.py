@@ -68,8 +68,8 @@ class NNErrorDelta(NNError):
     def prepare_twin_x(self, n_points_error: int, Xd: float, device: torch.device) -> Tuple[torch.Tensor, torch.Tensor]:
         n1 = int(np.floor((Xd + 1.0) / (1.0 - Xd)))
         n2 = n_points_error - n1
-        x1 = torch.linspace(-1.0, Xd, n1).reshape(-1, 1).to(device)
-        x2 = torch.linspace(Xd, 1.0, n2).reshape(-1, 1).to(device)
+        x1 = torch.linspace(-1.0, Xd-1e-3, n1).reshape(-1, 1).to(device)
+        x2 = torch.linspace(Xd+1e-3, 1.0, n2).reshape(-1, 1).to(device)
         x1.requires_grad = True
         x2.requires_grad = True
         return x1, x2
