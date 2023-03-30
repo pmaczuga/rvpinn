@@ -42,15 +42,16 @@ parser.add_argument("--params", type=str, default="params.ini",
                     help=('Path to .ini file with parameters. '
                           'Defaults to "params.ini" in current directory'))
 
-def get_params(parser: argparse.ArgumentParser) -> Params:
-    args = parser.parse_args()
+
+def get_params(args: argparse.Namespace) -> Params:
     kwargs = {key: value for key, value in vars(args).items() if value is not None}
-    params = Params(**kwargs)
+    params = Params(filename=args.params, **kwargs)
     return params
 
 def main():
+    args = parser.parse_args()
+    params = get_params(args)
     device = get_device()
-    params = get_params(parser)
     run(params, device)
 
 if __name__ == '__main__':

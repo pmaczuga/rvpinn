@@ -18,7 +18,7 @@ class Analytical(ABC):
 class AnalyticalAD(Analytical):
     """Analytical solution to Advection-Diffusion equation
     
-    Instances can be called as functions"""
+    Instances of this class can be called as functions"""
     
     def __init__(self, eps: float):
         self.eps = eps
@@ -43,7 +43,7 @@ class AnalyticalAD(Analytical):
 class AnalyticalDelta(Analytical):
     """Analytical solution to PDE: $ eps * u'' = delta_x0 $
 
-    Instances can be called as functions.
+    Instances of this class can be called as functions.
     """
     
     def __init__(self, eps: float, Xd: float):
