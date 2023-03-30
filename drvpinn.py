@@ -14,9 +14,9 @@ parser.add_argument('--tag', type=str,
 
 parser.add_argument('--epochs', type=int)
 parser.add_argument('--layers', type=int)
-parser.add_argument('--neurons_per_layer', type=int)
-parser.add_argument('--learning_rate', type=float)
-parser.add_argument('--use_best_pinn', type=bool)
+parser.add_argument('--neurons-per-layer', type=int)
+parser.add_argument('--learning-rate', type=float)
+parser.add_argument('--use-best-pinn', type=bool, action=argparse.BooleanOptionalAction)
 
 parser.add_argument('--equation', '-e', type=str, 
                     help=('Equation to use - '
@@ -25,14 +25,14 @@ parser.add_argument('--equation', '-e', type=str,
 parser.add_argument('--eps', type=float)
 parser.add_argument('--Xd', type=float)
 
-parser.add_argument("--compute_error", type=bool,
+parser.add_argument("--compute-error", type=bool, action=argparse.BooleanOptionalAction,
                     help='Whether to compute error in each iteration will influence performance')
-parser.add_argument("--n_points_x", type=int,
+parser.add_argument("--n-points-x", type=int,
                     help='Number of integration nodes')
-parser.add_argument("--n_points_error", type=int,
+parser.add_argument("--n-points-error", type=int,
                     help=('Number of integration nodes for computing error. '
                          'Ideally greater than n_points_x'))
-parser.add_argument("--n_test_func", type=int, 
+parser.add_argument("--n-test-func", type=int, 
                     help='Number of test functions')
 
 parser.add_argument("--atol", type=float)

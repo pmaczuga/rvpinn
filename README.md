@@ -51,10 +51,16 @@ You can also do this:
 ```
 $ python3 drvpinn.py --help
 
-usage: DRVPINN [-h] [--tag TAG] [--epochs EPOCHS] [--layers LAYERS] [--neurons_per_layer NEURONS_PER_LAYER]
-               [--learning_rate LEARNING_RATE] [--use_best_pinn USE_BEST_PINN] [--equation EQUATION] [--eps EPS] [--Xd XD]
-               [--compute_error COMPUTE_ERROR] [--n_points_x N_POINTS_X] [--n_points_error N_POINTS_ERROR]
-               [--n_test_func N_TEST_FUNC] [--atol ATOL] [--rtol RTOL] [--params PARAMS]
+usage: DRVPINN [-h] [--tag TAG] [--epochs EPOCHS] [--layers LAYERS]
+               [--neurons-per-layer NEURONS_PER_LAYER]
+               [--learning-rate LEARNING_RATE]
+               [--use-best-pinn | --no-use-best-pinn]
+               [--equation EQUATION] [--eps EPS] [--Xd XD]
+               [--compute-error | --no-compute-error]
+               [--n-points-x N_POINTS_X]
+               [--n-points-error N_POINTS_ERROR]
+               [--n-test-func N_TEST_FUNC] [--atol ATOL] [--rtol RTOL]
+               [--params PARAMS]
 
 Runs the training of DRVPINN
 
@@ -63,24 +69,28 @@ options:
   --tag TAG             Name of the folder for storing training results
   --epochs EPOCHS
   --layers LAYERS
-  --neurons_per_layer NEURONS_PER_LAYER
-  --learning_rate LEARNING_RATE
-  --use_best_pinn USE_BEST_PINN
+  --neurons-per-layer NEURONS_PER_LAYER
+  --learning-rate LEARNING_RATE
+  --use-best-pinn, --no-use-best-pinn
   --equation EQUATION, -e EQUATION
-                        Equation to use - either "delta" (dirichlet delta on RHS) or "ad" (Advection-Diffusion)
+                        Equation to use - either "delta" (Dirac delta on
+                        RHS) or "ad" (Advection-Diffusion)
   --eps EPS
   --Xd XD
-  --compute_error COMPUTE_ERROR
-                        Whether to compute error in each iteration will influence performance
-  --n_points_x N_POINTS_X
+  --compute-error, --no-compute-error
+                        Whether to compute error in each iteration will
+                        influence performance
+  --n-points-x N_POINTS_X
                         Number of integration nodes
-  --n_points_error N_POINTS_ERROR
-                        Number of integration nodes for computing error. Ideally greater than n_points_x
-  --n_test_func N_TEST_FUNC
+  --n-points-error N_POINTS_ERROR
+                        Number of integration nodes for computing error.
+                        Ideally greater than n_points_x
+  --n-test-func N_TEST_FUNC
                         Number of test functions
   --atol ATOL
   --rtol RTOL
-  --params PARAMS       Path to .ini file with parameters. Defaults to "params.ini" in current directory
+  --params PARAMS       Path to .ini file with parameters. Defaults to
+                        "params.ini" in current directory
 ```
 
 ## Interesting files
