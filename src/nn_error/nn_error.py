@@ -22,7 +22,8 @@ class NNError(ABC):
         """
         raise NotImplementedError()
     
-    def prepare_x(self, n_points_error: int, device: torch.device = torch.device("cpu")) -> torch.Tensor:
+    @classmethod
+    def prepare_x(cls, n_points_error: int, device: torch.device = torch.device("cpu")) -> torch.Tensor:
         x = torch.linspace(-1.0, 1.0, n_points_error).reshape(-1, 1).to(device)
         x.requires_grad = True
         return x

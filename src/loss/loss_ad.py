@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import math
-import numpy as np
 import torch
 
+from src.base_fun import PrecomputedBase, SinBase, precompute_base
 from src.loss.loss import Loss
 from src.pinn import PINN, dfdx, f
 from src.params import Params
@@ -13,18 +13,19 @@ class LossAD(Loss):
          self, 
          x: torch.Tensor,
          eps: float,
-         n_test_func: int
+         precomputed_base: PrecomputedBase
     ):
         self.x = x
         self.eps = eps
-        self.n_test_func = n_test_func
+        self.precomputed_base = precomputed_base
 
 
     # Allows to call object as function
     def __call__(self, pinn: PINN) -> torch.Tensor:
         x = self.x
         eps = self.eps
-        n_test_func = self.n_test_func
+        precomputed_base = self.precomputed_base
+        base_fun = precomputed_base.base_fun
         device = pinn.get_device()
 
         beta = 1
@@ -36,9 +37,9 @@ class LossAD(Loss):
         interior_loss_trial1 = eps * val
         interior_loss_trial2 = beta * val
         
-        for n in range(1,n_test_func): 
-            interior_loss_test1 = n * math.pi/2 * torch.cos(n*math.pi*(x+1)/2)  #we can precompute this terms also  
-            interior_loss_test2 = torch.sin(n*math.pi*(x+1)/2)
+        for n in range(1, precomputed_base.n_test_func + 1): 
+            interior_loss_test1 = precomputed_base.get_dx(n)
+            interior_loss_test2 = precomputed_base.get(n)
             inte1 = interior_loss_trial1.mul(interior_loss_test1)
             inte2 = interior_loss_trial2.mul(interior_loss_test2)
 
@@ -48,7 +49,8 @@ class LossAD(Loss):
 
             interior_loss = val1 + val2 - val3
             # update the final MSE loss 
-            final_loss+= 4/(eps*(n*math.pi)**2)*interior_loss.sum().pow(2) 
+            divider = base_fun.divider(n)
+            final_loss+= 1.0 / (eps + divider) * interior_loss.sum().pow(2) 
 
 
         boundary_xf = x[-1].reshape(-1, 1) #last point = 1
@@ -65,4 +67,6 @@ class LossAD(Loss):
     
     @classmethod
     def from_params(cls, x: torch.Tensor, params: Params) -> LossAD:
-        return cls(x=x, eps = params.eps, n_test_func = params.n_test_func)
+        base_fun = SinBase()
+        precomputed_base = precompute_base(base_fun, x, params.n_test_func)
+        return cls(x, params.eps, precomputed_base)

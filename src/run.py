@@ -8,7 +8,7 @@ from src.nn_error import nn_error_from_params
 from src.utils import *
 from src.params import Params
 
-def run(params, device):
+def run(params: Params, device: torch.device):
     print(f"Running on a device: {device}")
 
     x_raw = torch.linspace(-1.0, 1.0, steps=params.n_points_x)

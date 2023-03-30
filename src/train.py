@@ -32,34 +32,33 @@ def train_model(
     for epoch in range(max_epochs):
 
         try:
+          if nn_error:
+            error_vector[epoch] = nn_error.error(pinn)
+            norm_vector[epoch] = nn_error.norm(pinn)
+          loss: torch.Tensor = loss_fn(pinn)
+          loss_vector[epoch] = float(loss)
+          optimizer.zero_grad()
+          loss.backward(retain_graph=True)
+          optimizer.step()
+  
 
-            loss: torch.Tensor = loss_fn(pinn)
-            loss_vector[epoch] = float(loss)
-            if nn_error:
-               error_vector[epoch] = nn_error.error(pinn)
-               norm_vector[epoch] = nn_error.norm(pinn)
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-   
+          if epoch == 0:
+            loss0 = float(loss)
+            print("-------------------------------------------------------------------------------------------------")
+            print(f"Epoch: {epoch:>05d} - Loss: {float(loss):>.15f} - Relative Loss: {float(loss)/loss0:>.15f}")
+            print("-------------------------------------------------------------------------------------------------")
+  
 
-            if epoch == 0:
-              loss0 = float(loss)
-              print("-------------------------------------------------------------------------------------------------")
+          if (epoch+1) % 500 == 0:
               print(f"Epoch: {epoch:>05d} - Loss: {float(loss):>.15f} - Relative Loss: {float(loss)/loss0:>.15f}")
-              print("-------------------------------------------------------------------------------------------------")
-    
-
-            if (epoch+1) % 500 == 0:
-                print(f"Epoch: {epoch:>05d} - Loss: {float(loss):>.15f} - Relative Loss: {float(loss)/loss0:>.15f}")
-                if best == True:
-                  print(f"Best Epoch: {best_epoch:>05d} - Best Loss: {float(best_loss):>.15f} - Relative Best Loss: {float(best_loss)/loss0:>.15f}")
-                  print("-------------------------------------------------------------------------------------------------")
+              if best == True:
+                print(f"Best Epoch: {best_epoch:>05d} - Best Loss: {float(best_loss):>.15f} - Relative Best Loss: {float(best_loss)/loss0:>.15f}")
+                print("-------------------------------------------------------------------------------------------------")
 
 
-            if float(loss)<atol or float(loss)/loss0<rtol:
-              print(f"Epoch: {epoch:>05d} - Loss: {float(loss):>.15f} - Relative Loss: {float(loss)/loss0:>.15f}")
-              break
+          if float(loss)<atol or float(loss)/loss0<rtol:
+            print(f"Epoch: {epoch:>05d} - Loss: {float(loss):>.15f} - Relative Loss: {float(loss)/loss0:>.15f}")
+            break
 
         except KeyboardInterrupt:
             break

@@ -1,17 +1,21 @@
+from __future__ import annotations
+
 import math
 import numpy as np
 import torch
 from scipy import integrate
 
+from src.base_fun import PrecomputedBase, SinBase, precompute_base
+from src.params import Params
 from src.analytical import AnalyticalAD
 from src.pinn import PINN, dfdx
 from src.nn_error import NNError
 
 class NNErrorAD(NNError):
-    def __init__(self, eps: float, n_points_error: int, n_test_func: int):
+    def __init__(self, eps: float, n_points_error: int, precomputed_base: PrecomputedBase):
         self.eps = eps
         self.n_points_error = n_points_error
-        self.n_test_func = n_test_func
+        self.precomputed_base = precomputed_base
 
     def error(self, pinn: PINN) -> float:
         eps = self.eps
@@ -36,7 +40,8 @@ class NNErrorAD(NNError):
 
     def norm(self, pinn: PINN) -> float:
         eps = self.eps
-        n_test_func = self.n_test_func
+        precomputed_base = self.precomputed_base
+        base_fun = precomputed_base.base_fun
         device = pinn.get_device()
         x = self.prepare_x(self.n_points_error, device)
 
@@ -48,16 +53,16 @@ class NNErrorAD(NNError):
         interior_loss_trial1 = eps * val
         interior_loss_trial2 = beta * val
         
-        for n in range(1,n_test_func): 
-            interior_loss_test1 = n * math.pi/2 * torch.cos(n*math.pi*(x+1)/2)  #we can precompute this terms also  
-            interior_loss_test2 = torch.sin(n*math.pi*(x+1)/2)
+        for n in range(1, precomputed_base.n_test_func + 1): 
+            interior_loss_test1 = precomputed_base.get_dx(n)
+            interior_loss_test2 = precomputed_base.get(n)
             inte1 = interior_loss_trial1.mul(interior_loss_test1)
             inte2 = interior_loss_trial2.mul(interior_loss_test2)
 
-            x_int = x.flatten().detach()
-            y1 = inte1.flatten().detach()
-            y2 = inte2.flatten().detach()
-            y3 = interior_loss_test2.flatten().detach()
+            x_int = x.detach().flatten()
+            y1 = inte1.detach().flatten()
+            y2 = inte2.detach().flatten()
+            y3 = interior_loss_test2.detach().flatten()
 
             val1 = integrate.simpson(y1, x=x_int)
             val2 = integrate.simpson(y2, x=x_int)
@@ -65,11 +70,13 @@ class NNErrorAD(NNError):
 
             interior_loss = val1 + val2 - val3
             # update the final MSE loss 
-            final_loss += 4/(eps*(n*math.pi)**2)*interior_loss**2
+            divider = base_fun.divider(n)
+            final_loss+= 1/(eps * divider)*interior_loss**2 
 
         return final_loss
     
-    def prepare_x(self, n_points_error: int, device: torch.device = torch.device("cpu")):
+    @classmethod
+    def prepare_x(cls, n_points_error: int, device: torch.device = torch.device("cpu")):
         x = torch.linspace(0.0, 1.0, n_points_error)
         
         # Function that grows from 0 to 1
@@ -89,3 +96,9 @@ class NNErrorAD(NNError):
 
         return real_x
     
+    @classmethod
+    def from_params(cls, params: Params) -> NNErrorAD:
+        x = cls.prepare_x(params.n_points_error)
+        base_fun = SinBase()
+        precomputed_base = precompute_base(base_fun, x, params.n_test_func)
+        return cls(params.eps, params.n_points_error, precomputed_base)

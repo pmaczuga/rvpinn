@@ -3,7 +3,7 @@ from src.nn_error import NNError, NNErrorAD, NNErrorDelta
 
 def nn_error_from_params(params: Params) -> NNError:
     if params.equation == "ad":
-        return NNErrorAD(params.eps, params.n_points_error, params.n_test_func)
+        return NNErrorAD.from_params(params)
     if params.equation == "delta":
-        return NNErrorDelta(params.eps, params.Xd, params.n_points_error, params.n_test_func)
-    raise ValueError(f"Wrong equation in params: {params.equation}")
+        return NNErrorDelta.from_params(params)
+    raise ValueError(f"Wrong equation in params: {params.equation}") 

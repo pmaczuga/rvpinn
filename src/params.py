@@ -51,19 +51,19 @@ class Params:
         self.rtol               = self._getfloat("rtol", config, **kwargs)
         self.tag                = self._getstr("tag", config, **kwargs)
 
-    def _getstr(self, name: str, config: configparser.ConfigParser, **kwargs):
+    def _getstr(self, name: str, config: configparser.ConfigParser, **kwargs) -> str:
         config_value = config["Params"].get(name)
         return kwargs.get(name, config_value)
 
-    def _getfloat(self, name: str, config: configparser.ConfigParser, **kwargs):
+    def _getfloat(self, name: str, config: configparser.ConfigParser, **kwargs) -> float:
         config_value = config["Params"].getfloat(name)
         return kwargs.get(name, config_value)
     
-    def _getint(self, name: str, config: configparser.ConfigParser, **kwargs):
+    def _getint(self, name: str, config: configparser.ConfigParser, **kwargs) -> int:
         config_value = config["Params"].getint(name)
         return kwargs.get(name, config_value)
 
-    def _getboolean(self, name: str, config: configparser.ConfigParser, **kwargs):
+    def _getboolean(self, name: str, config: configparser.ConfigParser, **kwargs) -> bool:
         config_value = config["Params"].getboolean(name)
         return kwargs.get(name, config_value)
 

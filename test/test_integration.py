@@ -31,7 +31,7 @@ class TestIntegration(unittest.TestCase):
         self.assertTrue(torch.all(dxs == expected))
 
     def test_midpoints_int(self):
-        x = torch.linspace(0, math.pi, 1000)
+        x = torch.linspace(0, math.pi, 4000)
         f = lambda x: torch.sin(x)
         val = midpoint_int(f, x).item()
         self.assertAlmostEqual(val, 2.0)

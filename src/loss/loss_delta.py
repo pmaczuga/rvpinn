@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import math
+from typing import List
 import numpy as np
 import torch
 
+from src.base_fun import BaseFun, PrecomputedBase, SinBase, precompute_base
 from src.loss.loss import Loss
 from src.pinn import PINN, dfdx, f
 from src.params import Params
@@ -14,12 +16,12 @@ class LossDelta(Loss):
          x: torch.Tensor,
          eps: float,
          Xd: float,
-         n_test_func: int
+         precomputed_base: PrecomputedBase,
     ):
         self.x = x
         self.eps = eps
         self.Xd = Xd
-        self.n_test_func = n_test_func
+        self.precomputed_base = precomputed_base
 
 
     # Allows to call object as function
@@ -27,7 +29,8 @@ class LossDelta(Loss):
         x = self.x
         eps = self.eps
         Xd = self.Xd
-        n_test_func = self.n_test_func
+        precomputed_base = self.precomputed_base
+        base_fun = self.precomputed_base.base_fun
         device = pinn.get_device()
 
         dx=2.0/len(x)
@@ -37,12 +40,14 @@ class LossDelta(Loss):
         val = dfdx(pinn, x, order=1)
         interior_loss_trial1 = eps*val
 
-        for n in range(1, n_test_func):
-            interior_loss_test1 = n * math.pi/2 * torch.cos(n*math.pi*(x+1)/2)
+        for n in range(1, precomputed_base.n_test_func + 1):
+            interior_loss_test1 = precomputed_base.get_dx(n)
             interior_loss = interior_loss_trial1.mul(interior_loss_test1)
-            interior_loss = torch.trapz(interior_loss.reshape(1,-1).to(device), dx=dx).to(device).sum()-np.sin(n*math.pi*(Xd+1)/2)
+            interior_loss = torch.trapz(interior_loss.reshape(1,-1).to(device), dx=dx).to(device).sum()
+            interior_loss = interior_loss - base_fun(torch.tensor(Xd), n)
             # update the final MSE loss 
-            final_loss+= 4/(eps*(n*math.pi)**2)*interior_loss.pow(2) 
+            divider = base_fun.divider(n)
+            final_loss+= 1/(eps * divider)*interior_loss.pow(2) 
 
         boundary_xi = x[0].reshape(-1, 1) #first point = 0
         boundary_loss_xi = f(pinn, boundary_xi)
@@ -58,4 +63,6 @@ class LossDelta(Loss):
     
     @classmethod
     def from_params(cls, x: torch.Tensor, params: Params) -> LossDelta:
-        return cls(x, params.eps, params.Xd, params.n_test_func)
+        base_fun = SinBase()
+        precomputed_base = precompute_base(base_fun, x, params.n_test_func)
+        return cls(x, params.eps, params.Xd, precomputed_base)

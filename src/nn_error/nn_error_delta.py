@@ -1,7 +1,11 @@
+from __future__ import annotations
+
 import math
 from typing import Tuple
 import numpy as np
 import torch
+from src.base_fun import PrecomputedBase, SinBase, precompute_base
+from src.params import Params
 from src.integration import midpoint_int
 from src.analytical import AnalyticalDelta
 from src.pinn import PINN, dfdx
@@ -9,11 +13,11 @@ from src.nn_error import NNError
 from scipy import integrate
 
 class NNErrorDelta(NNError):
-    def __init__(self, eps: float,  Xd: float, n_points_error: int, n_test_func: int):
+    def __init__(self, eps: float,  Xd: float, n_points_error: int, precomputed_base: PrecomputedBase):
         self.eps = eps
         self.Xd = Xd
         self.n_points_error = n_points_error
-        self.n_test_func = n_test_func
+        self.precomputed_base = precomputed_base
 
     def error(self, pinn: PINN) -> float:
         eps = self.eps
@@ -51,7 +55,8 @@ class NNErrorDelta(NNError):
     def norm(self, pinn: PINN) -> float:
         eps = self.eps
         Xd = self.Xd
-        n_test_func = self.n_test_func
+        precomputed_base = self.precomputed_base
+        base_fun = precomputed_base.base_fun
         device = pinn.get_device()
         x = self.prepare_x(self.n_points_error, device)
     
@@ -60,13 +65,16 @@ class NNErrorDelta(NNError):
         val = dfdx(pinn, x, order=1)
         interior_loss_trial1 = eps*val
 
-        for n in range(1, n_test_func):
-            interior_loss_test1 = n * math.pi/2 * torch.cos(n*math.pi*(x+1)/2)
+        for n in range(1, precomputed_base.n_test_func + 1):
+            interior_loss_test1 = precomputed_base.get_dx(n)
             interior_loss = interior_loss_trial1.mul(interior_loss_test1)
             interior_loss = interior_loss.detach().flatten()
-            interior_loss = integrate.simpson(interior_loss, x=x.detach().flatten())-np.sin(n*math.pi*(Xd+1)/2)
+            interior_loss = integrate.simpson(interior_loss, x=x.detach().flatten())
+            interior_loss = interior_loss - base_fun(torch.tensor(Xd), n).item()
+
             # update the final MSE loss 
-            final_loss+= 4/(eps*(n*math.pi)**2)*interior_loss**2
+            divider = base_fun.divider(n)
+            final_loss+= 1/(eps * divider)*interior_loss**2 
     
         return final_loss
     
@@ -78,3 +86,10 @@ class NNErrorDelta(NNError):
         x1.requires_grad = True
         x2.requires_grad = True
         return x1, x2
+
+    @classmethod
+    def from_params(cls, params: Params) -> NNErrorDelta:
+        x = cls.prepare_x(params.n_points_error)
+        base_fun = SinBase()
+        precomputed_base = precompute_base(base_fun, x, params.n_test_func)
+        return cls(params.eps, params.Xd, params.n_points_error, precomputed_base)
