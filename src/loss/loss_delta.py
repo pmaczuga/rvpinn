@@ -63,6 +63,6 @@ class LossDelta(Loss):
     
     @classmethod
     def from_params(cls, x: torch.Tensor, params: Params) -> LossDelta:
-        base_fun = SinBase()
+        base_fun = BaseFun.from_params(params)
         precomputed_base = precompute_base(base_fun, x, params.n_test_func)
         return cls(x, params.eps, params.Xd, precomputed_base)

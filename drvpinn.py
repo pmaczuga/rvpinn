@@ -22,6 +22,8 @@ parser.add_argument('--equation', '-e', type=str,
                     help=('Equation to use - '
                           'either "delta" (Dirac delta on RHS) '
                           'or "ad" (Advection-Diffusion)'))
+parser.add_argument('--test-func', type=str, 
+                    help='Type of test functions - either "sin" or "poly". NOTE: "poly" is not yet implemented')
 parser.add_argument('--eps', type=float)
 parser.add_argument('--Xd', type=float)
 

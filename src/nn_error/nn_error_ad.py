@@ -5,7 +5,7 @@ import numpy as np
 import torch
 from scipy import integrate
 
-from src.base_fun import PrecomputedBase, SinBase, precompute_base
+from src.base_fun import BaseFun, PrecomputedBase, SinBase, precompute_base
 from src.params import Params
 from src.analytical import AnalyticalAD
 from src.pinn import PINN, dfdx
@@ -99,6 +99,6 @@ class NNErrorAD(NNError):
     @classmethod
     def from_params(cls, params: Params) -> NNErrorAD:
         x = cls.prepare_x(params.n_points_error)
-        base_fun = SinBase()
+        base_fun = BaseFun.from_params(params)
         precomputed_base = precompute_base(base_fun, x, params.n_test_func)
         return cls(params.eps, params.n_points_error, precomputed_base)

@@ -41,6 +41,7 @@ class Params:
         self.learning_rate      = self._getfloat("learning_rate", config, **kwargs)
         self.use_best_pinn      = self._getboolean("use_best_pinn", config, **kwargs)
         self.equation           = self._getstr("equation", config, **kwargs)
+        self.test_func          = self._getstr("test_func", config, **kwargs)
         self.eps                = self._getfloat("eps", config, **kwargs)
         self.Xd                 = self._getfloat("Xd", config, **kwargs)
         self.compute_error      = self._getboolean("compute_error", config, **kwargs)

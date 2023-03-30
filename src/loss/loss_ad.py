@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 import torch
 
-from src.base_fun import PrecomputedBase, SinBase, precompute_base
+from src.base_fun import BaseFun, PrecomputedBase, SinBase, precompute_base
 from src.loss.loss import Loss
 from src.pinn import PINN, dfdx, f
 from src.params import Params
@@ -67,6 +67,6 @@ class LossAD(Loss):
     
     @classmethod
     def from_params(cls, x: torch.Tensor, params: Params) -> LossAD:
-        base_fun = SinBase()
+        base_fun = BaseFun.from_params(params)
         precomputed_base = precompute_base(base_fun, x, params.n_test_func)
         return cls(x, params.eps, precomputed_base)
