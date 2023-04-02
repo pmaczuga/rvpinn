@@ -57,8 +57,10 @@ class SinBase(BaseFun):
 
 
 class PolyBase(BaseFun):
-    def __init__(self, N: int):
-        print("Generating polynomial base. Hold tight...")
+    def __init__(self, N: int, log=True):
+        self.log = log
+        if log:
+            print("Generating polynomial base. Hold tight...")
         base, base_norm = self._gram_schmidt(N)
         self.fs = [self._to_lambda(sym) for sym in base_norm]
         self.dxs = [self._to_lambda(diff(sym)) for sym in base_norm]
@@ -78,7 +80,7 @@ class PolyBase(BaseFun):
     def _proj_u(self, u,v):
         return self._inner_prod(u,v)/(self._inner_prod(u,u))*u
 
-    def _gram_schmidt(self, N: int, log=True):
+    def _gram_schmidt(self, N: int):
         x = symbols('x')
         basis = []
         basis_norm = []
@@ -97,7 +99,7 @@ class PolyBase(BaseFun):
                 uk -= self._proj_u(basis[j],vk)
             basis.append(expand(uk))
             basis_norm.append(expand(uk/sqrt(self._inner_prod(uk,uk))))
-            if (log) and (n+1)%10 == 0:
+            if self.log and (n+1)%10 == 0:
                 print(f"\t{n+1}/{N}")
 
         return basis, basis_norm

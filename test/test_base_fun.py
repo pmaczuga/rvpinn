@@ -20,7 +20,7 @@ class TestPolyBase(unittest.TestCase):
 
     def test_call(self):
         x = torch.tensor([-1., 1.])
-        base = PolyBase(3)
+        base = PolyBase(3, log=False)
         # n = 1
         compared = torch.isclose(base(x, 1), torch.Tensor([0.0, 0.0]), atol=1e-06)
         self.assertTrue(torch.all(compared))
@@ -33,14 +33,14 @@ class TestPolyBase(unittest.TestCase):
 
     def test_dx(self):
         x = torch.tensor([-1., 1.])
-        base = PolyBase(3)
+        base = PolyBase(3, log=False)
         left = math.sqrt(6) * (-1.0) / 2
         right = math.sqrt(6) * (1.0) / 2
         compared = torch.isclose(base.dx(x, 1), torch.Tensor([left, right]), atol=1e-06)
         self.assertTrue(torch.all(compared))
 
     def test_divider(self):
-        base = PolyBase(3)
+        base = PolyBase(3, log=False)
         self.assertEqual(base.divider(1), 1.0)
         self.assertEqual(base.divider(2), 1.0)
         self.assertEqual(base.divider(3), 1.0)
