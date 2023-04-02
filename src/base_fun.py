@@ -1,6 +1,7 @@
 from __future__ import annotations
 from abc import ABC
 import math
+from sympy import *
 
 from typing import List
 import numpy as np
@@ -40,7 +41,7 @@ class BaseFun(ABC):
         if params.test_func == "sin":
             return SinBase()
         if params.test_func == "poly":
-            return PolyBase()
+            return PolyBase(params.n_test_func)
         raise ValueError(f"Not supported test_func in params: {params.test_func}")
 
 
@@ -54,19 +55,54 @@ class SinBase(BaseFun):
     def divider(self, n: int) -> float:
         return (n*math.pi)**2 / 4.0
 
-# TODO - Implement
-# Only thing you need to make this work is to implement 3 methods below
-# See SinBase for reference
-# divider is what we divide loss in the end (=1 if orthonormal)
-# However when implemented you probably want to change:
-# - comment in params.ini
-# - help message for parser in drvpinn.py
+
 class PolyBase(BaseFun):
+    def __init__(self, N: int):
+        print("Generating polynomial base. Hold tight...")
+        base, base_norm = self._gram_schmidt(N)
+        self.fs = [self._to_lambda(sym) for sym in base_norm]
+        self.dxs = [self._to_lambda(diff(sym)) for sym in base_norm]
+
     def __call__(self, x: torch.Tensor, n: int) -> torch.Tensor:
-        raise NotImplementedError("PolyBase is not implemented")
+        return self.fs[n-1](x)      # n starts at 1
     
     def dx(self, x: torch.Tensor, n: int) -> torch.Tensor:
-        raise NotImplementedError("PolyBase is not implemented")
+        return self.dxs[n-1](x)     # n starts at 1
     
     def divider(self, n: int) -> float:
-        raise NotImplementedError("PolyBase is not implemented")
+        return 1.0                  # Orthonormal
+
+    def _inner_prod(self, u,v,x=symbols('x')):
+        return integrate(diff(u,x)*diff(v,x), (x, -1, 1))
+
+    def _proj_u(self, u,v):
+        return self._inner_prod(u,v)/(self._inner_prod(u,u))*u
+
+    def _gram_schmidt(self, N: int, log=True):
+        x = symbols('x')
+        basis = []
+        basis_norm = []
+
+        basis.append(factor(x**2-1))
+        basis_norm.append(expand(basis[0]/sqrt(self._inner_prod(basis[0],basis[0]))))
+
+        for n in range(1,N):
+
+            vk = x*basis[n-1]
+
+            uk = 1*vk
+
+            for j in range(n):
+
+                uk -= self._proj_u(basis[j],vk)
+            basis.append(expand(uk))
+            basis_norm.append(expand(uk/sqrt(self._inner_prod(uk,uk))))
+            if (log) and (n+1)%10 == 0:
+                print(f"\t{n+1}/{N}")
+
+        return basis, basis_norm
+
+    def _to_lambda(self, sym):
+        proper_sqrt = str(sym).replace("sqrt", "math.sqrt")
+        with_lambda = f"lambda x: {proper_sqrt}"
+        return eval(with_lambda)

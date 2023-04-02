@@ -2,7 +2,7 @@ import math
 import unittest
 
 import torch
-from src.base_fun import SinBase, precompute_base
+from src.base_fun import PolyBase, SinBase, precompute_base
 
 class TestSinBase(unittest.TestCase):
 
@@ -15,6 +15,35 @@ class TestSinBase(unittest.TestCase):
         # n = 2
         compared = torch.isclose(base(x, 2), torch.Tensor([0.0, 1.0, 0.0, -1.0, 0.0]), atol=1e-06)
         self.assertTrue(torch.all(compared))
+
+class TestPolyBase(unittest.TestCase):
+
+    def test_call(self):
+        x = torch.tensor([-1., 1.])
+        base = PolyBase(3)
+        # n = 1
+        compared = torch.isclose(base(x, 1), torch.Tensor([0.0, 0.0]), atol=1e-06)
+        self.assertTrue(torch.all(compared))
+        # n = 2
+        compared = torch.isclose(base(x, 2), torch.Tensor([0.0, 0.0]), atol=1e-06)
+        self.assertTrue(torch.all(compared))
+        # n = 3
+        compared = torch.isclose(base(x, 3), torch.Tensor([0.0, 0.0]), atol=1e-06)
+        self.assertTrue(torch.all(compared))
+
+    def test_dx(self):
+        x = torch.tensor([-1., 1.])
+        base = PolyBase(3)
+        left = math.sqrt(6) * (-1.0) / 2
+        right = math.sqrt(6) * (1.0) / 2
+        compared = torch.isclose(base.dx(x, 1), torch.Tensor([left, right]), atol=1e-06)
+        self.assertTrue(torch.all(compared))
+
+    def test_divider(self):
+        base = PolyBase(3)
+        self.assertEqual(base.divider(1), 1.0)
+        self.assertEqual(base.divider(2), 1.0)
+        self.assertEqual(base.divider(3), 1.0)
 
 class TestPrecomputeBase(unittest.TestCase):
 
