@@ -36,6 +36,15 @@ parser.add_argument("--n-points-error", type=int,
                          'Ideally greater than n_points_x'))
 parser.add_argument("--n-test-func", type=int, 
                     help='Number of test functions')
+parser.add_argument("--integration-rule-loss", type=str,
+                    help='Integration rule for loss function. '
+                         'Either "trapz" or "midpoint.')
+parser.add_argument("--integration-rule-norm", type=str,
+                    help='Integration rule for calculating norm. '
+                    'One of "trapz", "midpoint" or "simpson".')
+parser.add_argument("--integration-rule-error", type=str,
+                    help='Integration rule for calculating error. ' 
+                    'One of "trapz", "midpoint" or "simpson".')
 
 parser.add_argument("--atol", type=float)
 parser.add_argument("--rtol", type=float)

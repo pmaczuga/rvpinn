@@ -46,7 +46,7 @@ def save_result(pinn: PINN, result, params: Params):
     save_pinn_by_tag(pinn, params.tag)
     save_loss_by_tag(result.loss, params.tag)
     if result.norm is not None:
-        save_norm_by_tag(result.loss, params.tag)
+        save_norm_by_tag(result.norm, params.tag)
     if result.error is not None:
         save_error_by_tag(result.error, params.tag)
 

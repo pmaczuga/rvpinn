@@ -54,13 +54,15 @@ $ python3 drvpinn.py --help
 usage: DRVPINN [-h] [--tag TAG] [--epochs EPOCHS] [--layers LAYERS]
                [--neurons-per-layer NEURONS_PER_LAYER]
                [--learning-rate LEARNING_RATE]
-               [--use-best-pinn | --no-use-best-pinn]
-               [--equation EQUATION] [--eps EPS] [--Xd XD]
+               [--use-best-pinn | --no-use-best-pinn] [--equation EQUATION]
+               [--test-func TEST_FUNC] [--eps EPS] [--Xd XD]
                [--compute-error | --no-compute-error]
-               [--n-points-x N_POINTS_X]
-               [--n-points-error N_POINTS_ERROR]
-               [--n-test-func N_TEST_FUNC] [--atol ATOL] [--rtol RTOL]
-               [--params PARAMS]
+               [--n-points-x N_POINTS_X] [--n-points-error N_POINTS_ERROR]
+               [--n-test-func N_TEST_FUNC]
+               [--integration-rule-loss INTEGRATION_RULE_LOSS]
+               [--integration-rule-norm INTEGRATION_RULE_NORM]
+               [--integration-rule-error INTEGRATION_RULE_ERROR] [--atol ATOL]
+               [--rtol RTOL] [--params PARAMS]
 
 Runs the training of DRVPINN
 
@@ -73,8 +75,10 @@ options:
   --learning-rate LEARNING_RATE
   --use-best-pinn, --no-use-best-pinn
   --equation EQUATION, -e EQUATION
-                        Equation to use - either "delta" (Dirac delta on
-                        RHS) or "ad" (Advection-Diffusion)
+                        Equation to use - either "delta" (Dirac delta on RHS)
+                        or "ad" (Advection-Diffusion)
+  --test-func TEST_FUNC
+                        Type of test functions - either "sin" or "poly"
   --eps EPS
   --Xd XD
   --compute-error, --no-compute-error
@@ -87,10 +91,20 @@ options:
                         Ideally greater than n_points_x
   --n-test-func N_TEST_FUNC
                         Number of test functions
+  --integration-rule-loss INTEGRATION_RULE_LOSS
+                        Integration rule for loss function. Either "trapz" or
+                        "midpoint.
+  --integration-rule-norm INTEGRATION_RULE_NORM
+                        Integration rule for calculating norm. One of "trapz",
+                        "midpoint" or "simpson".
+  --integration-rule-error INTEGRATION_RULE_ERROR
+                        Integration rule for calculating error. One of
+                        "trapz", "midpoint" or "simpson".
   --atol ATOL
   --rtol RTOL
   --params PARAMS       Path to .ini file with parameters. Defaults to
                         "params.ini" in current directory
+
 ```
 
 ## Interesting files
@@ -101,3 +115,4 @@ options:
 - `loss/loss_delta` - loss function for equation with Dirac delta on RHS
 - `nn_error/nn_error_ad.py` - calculation of error and norm for for Advection-Diffusion equation
 - `nn_error/nn_error_delta.py` - calculation of error and norm equation with Dirac delta on RHS
+- `integration.py` - implemented integration rules

@@ -6,18 +6,26 @@ import numpy as np
 import torch
 from src.base_fun import BaseFun, PrecomputedBase, SinBase, precompute_base
 from src.params import Params
-from src.integration import midpoint_int
+from src.integration import IntegrationRule, TorchFunction, get_int_rule, midpoint_int
 from src.analytical import AnalyticalDelta
 from src.pinn import PINN, dfdx
 from src.nn_error import NNError
 from scipy import integrate
 
 class NNErrorDelta(NNError):
-    def __init__(self, eps: float,  Xd: float, n_points_error: int, precomputed_base: PrecomputedBase):
+    def __init__(self, 
+                 eps: float,  
+                 Xd: float, 
+                 n_points_error: int, 
+                 precomputed_base: PrecomputedBase,
+                 integration_rule_norm: IntegrationRule,
+                 integration_rule_error: IntegrationRule):
         self.eps = eps
         self.Xd = Xd
         self.n_points_error = n_points_error
         self.precomputed_base = precomputed_base
+        self.integration_rule_norm = integration_rule_norm
+        self.integration_rule_error = integration_rule_error
 
     def error(self, pinn: PINN) -> float:
         eps = self.eps
@@ -40,8 +48,8 @@ class NNErrorDelta(NNError):
         x1 = x1
         x2 = x2
 
-        up1 = midpoint_int(up1_f, x=x1).detach().flatten()
-        up2 = midpoint_int(up2_f, x=x2).detach().flatten()
+        up1 = self.integration_rule_error(up1_f, x1).detach().flatten()
+        up2 = self.integration_rule_error(up2_f, x2).detach().flatten()
 
         # It is constant
         u1 = analytical.left_dx(x1)[0].item()
@@ -56,11 +64,13 @@ class NNErrorDelta(NNError):
         eps = self.eps
         Xd = self.Xd
         precomputed_base = self.precomputed_base
+        int_rule = self.integration_rule_norm
         base_fun = precomputed_base.base_fun
         device = pinn.get_device()
         x = self.prepare_x(self.n_points_error, device)
-    
-        final_loss = 0.0
+        x, dx = int_rule.prepare_x_dx(x)
+
+        final_loss = torch.tensor(0.0)
         
         val = dfdx(pinn, x, order=1)
         interior_loss_trial1 = eps*val
@@ -68,15 +78,14 @@ class NNErrorDelta(NNError):
         for n in range(1, precomputed_base.n_test_func + 1):
             interior_loss_test1 = precomputed_base.get_dx(n)
             interior_loss = interior_loss_trial1.mul(interior_loss_test1)
-            interior_loss = interior_loss.detach().flatten()
-            interior_loss = integrate.simpson(interior_loss, x=x.detach().flatten())
-            interior_loss = interior_loss - base_fun(torch.tensor(Xd), n).item()
+            interior_loss = int_rule.int_using_x_dx(interior_loss, x, dx).sum()
+            interior_loss = interior_loss - base_fun(torch.tensor(Xd), n)
 
             # update the final MSE loss 
             divider = base_fun.divider(n)
             final_loss+= 1/(eps * divider)*interior_loss**2 
     
-        return final_loss
+        return final_loss.item()
     
     def prepare_twin_x(self, n_points_error: int, Xd: float, device: torch.device) -> Tuple[torch.Tensor, torch.Tensor]:
         n1 = int(np.floor((Xd + 1.0) / (1.0 - Xd)))
@@ -89,7 +98,16 @@ class NNErrorDelta(NNError):
 
     @classmethod
     def from_params(cls, params: Params) -> NNErrorDelta:
+        integration_rule_error = get_int_rule(params.integration_rule_error)
+        integration_rule_norm = get_int_rule(params.integration_rule_norm)
         x = cls.prepare_x(params.n_points_error)
         base_fun = BaseFun.from_params(params)
+        x, dx = integration_rule_norm.prepare_x_dx(x)
         precomputed_base = precompute_base(base_fun, x, params.n_test_func)
-        return cls(params.eps, params.Xd, params.n_points_error, precomputed_base)
+
+        return cls(params.eps, 
+                   params.Xd, 
+                   params.n_points_error, 
+                   precomputed_base, 
+                   integration_rule_norm, 
+                   integration_rule_error)
