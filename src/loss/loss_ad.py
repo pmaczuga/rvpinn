@@ -54,7 +54,7 @@ class LossAD(Loss):
             interior_loss = val1 + val2 - val3
             # update the final MSE loss 
             divider = base_fun.divider(n)
-            final_loss+= 1.0 / (eps + divider) * interior_loss.sum().pow(2) 
+            final_loss+= 1.0 / (eps * divider) * interior_loss.sum().pow(2) 
 
 
         boundary_xf = x[-1].reshape(-1, 1) #last point = 1
