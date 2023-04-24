@@ -9,15 +9,17 @@ import torch
 
 from src.params import Params
 
-def precompute_base(base_fun: BaseFun, x: torch.Tensor, n_test_func: int) -> PrecomputedBase:
-    return PrecomputedBase(base_fun, x, n_test_func)
+def precompute_base(base_fun: BaseFun, x: torch.Tensor, eps: float, n_test_func: int) -> PrecomputedBase:
+    return PrecomputedBase(base_fun, x, eps, n_test_func)
 
 class PrecomputedBase():
-    def __init__(self, base_fun: BaseFun, x: torch.Tensor, n_test_func: int):
+    def __init__(self, base_fun: BaseFun, x: torch.Tensor, eps: float, n_test_func: int):
         self.base_fun = base_fun
         self.n_test_func = n_test_func
         self._vals = [base_fun(x, n) for n in range(1, n_test_func + 1)]
         self._dxs = [base_fun.dx(x, n) for n in range(1, n_test_func + 1)]
+        self._matrix = self.base_fun.calculate_matrix(eps, n_test_func)
+        print(self._matrix)
 
     def get(self, n: int) -> torch.Tensor:
         return self._vals[n-1]
@@ -25,6 +27,8 @@ class PrecomputedBase():
     def get_dx(self, n: int) -> torch.Tensor:
         return self._dxs[n-1]
 
+    def get_matrix(self) -> torch.Tensor:
+        return self._matrix
 
 class BaseFun(ABC):
     def __call__(self, x: torch.Tensor, n: int) -> torch.Tensor:
@@ -34,6 +38,9 @@ class BaseFun(ABC):
         raise NotImplementedError()
     
     def divider(self, n: int) -> float:
+        raise NotImplementedError()
+    
+    def calculate_matrix(self, eps: float, n_test_func: int) -> torch.Tensor:
         raise NotImplementedError()
 
     @classmethod
@@ -54,7 +61,13 @@ class SinBase(BaseFun):
     
     def divider(self, n: int) -> float:
         return (n*math.pi)**2 / 4.0
-
+    
+    def calculate_matrix(self, eps: float, n_test_func: int) -> torch.Tensor:
+        matrix = torch.zeros(n_test_func, n_test_func)
+        for i in range(n_test_func):
+            n = i+1
+            matrix[i,i] = eps * (n*math.pi)**2 / 4.0
+        return torch.inverse(matrix)
 
 class PolyBase(BaseFun):
     def __init__(self, N: int, log=True):
@@ -73,6 +86,12 @@ class PolyBase(BaseFun):
     
     def divider(self, n: int) -> float:
         return 1.0                  # Orthonormal
+
+    def calculate_matrix(self, n_test_func: int) -> torch.Tensor:
+        matrix = torch.zeros(n_test_func, n_test_func)
+        for i in range(n_test_func):
+            matrix[i,i] = 1.0
+        return torch.inverse(matrix)
 
     def _inner_prod(self, u,v,x=symbols('x')):
         return integrate(diff(u,x)*diff(v,x), (x, -1, 1))

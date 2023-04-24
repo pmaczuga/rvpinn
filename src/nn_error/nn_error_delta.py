@@ -72,11 +72,11 @@ class NNErrorDelta(NNError):
         device = pinn.get_device()
         x = self.prepare_x(self.n_points_error, device)
         x, dx = int_rule.prepare_x_dx(x)
-
-        final_loss = torch.tensor(0.0)
         
         val = dfdx(pinn, x, order=1)
         interior_loss_trial1 = eps*val
+
+        L = torch.zeros(precomputed_base.n_test_func)
 
         for n in range(1, precomputed_base.n_test_func + 1):
             interior_loss_test1 = precomputed_base.get_dx(n)
@@ -84,10 +84,12 @@ class NNErrorDelta(NNError):
             interior_loss = int_rule.int_using_x_dx(interior_loss, x, dx).sum()
             interior_loss = interior_loss - base_fun(torch.tensor(Xd), n)
 
-            # update the final MSE loss 
-            divider = base_fun.divider(n) * self.divider
-            final_loss+= 1/(eps * divider)*interior_loss**2 
+            L[n-1] = interior_loss
     
+        G = precomputed_base.get_matrix()
+        final_loss = torch.matmul(torch.matmul(L.T, G), L)
+        final_loss = final_loss / self.divider
+
         return final_loss.item()
     
     def prepare_twin_x(self, n_points_error: int, Xd: float, device: torch.device) -> Tuple[torch.Tensor, torch.Tensor]:
@@ -106,7 +108,7 @@ class NNErrorDelta(NNError):
         x = cls.prepare_x(params.n_points_error)
         base_fun = BaseFun.from_params(params)
         x, dx = integration_rule_norm.prepare_x_dx(x)
-        precomputed_base = precompute_base(base_fun, x, params.n_test_func)
+        precomputed_base = precompute_base(base_fun, x, params.eps, params.n_test_func)
 
         return cls(params.eps, 
                    params.Xd, 

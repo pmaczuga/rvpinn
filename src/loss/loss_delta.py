@@ -40,20 +40,22 @@ class LossDelta(Loss):
         device = pinn.get_device()
 
         x, dx = int_rule.prepare_x_dx(x)
-    
-        final_loss = torch.tensor(0.0)
         
         val = dfdx(pinn, x, order=1)
         interior_loss_trial1 = eps*val
+
+        L = torch.zeros(precomputed_base.n_test_func)
 
         for n in range(1, precomputed_base.n_test_func + 1):
             interior_loss_test1 = precomputed_base.get_dx(n)
             interior_loss = interior_loss_trial1.mul(interior_loss_test1)
             interior_loss = int_rule.int_using_x_dx(interior_loss, x, dx).sum()
             interior_loss = interior_loss - base_fun(torch.tensor(Xd), n)
-            # update the final MSE loss 
-            divider = base_fun.divider(n) * self.divider
-            final_loss+= 1/(eps * divider)*interior_loss.pow(2) 
+            L[n-1] = interior_loss
+
+        G = precomputed_base.get_matrix()
+        final_loss = torch.matmul(torch.matmul(L.T, G), L)
+        final_loss = final_loss / self.divider
 
         boundary_xi = x[0].reshape(-1, 1) #first point = 0
         boundary_loss_xi = f(pinn, boundary_xi)
@@ -72,5 +74,5 @@ class LossDelta(Loss):
         base_fun = BaseFun.from_params(params)
         integration_rule = get_int_rule(params.integration_rule_loss)
         base_x, dx = integration_rule.prepare_x_dx(x)
-        precomputed_base = precompute_base(base_fun, base_x, params.n_test_func)
+        precomputed_base = precompute_base(base_fun, base_x, params.eps, params.n_test_func)
         return cls(x, params.eps, params.Xd, precomputed_base, integration_rule, params.divide_by_test)

@@ -62,13 +62,13 @@ class NNErrorAD(NNError):
         x, dx = int_rule.prepare_x_dx(x)
 
         beta = 1
-
-        final_loss = 0.0
     
         val = dfdx(pinn, x, order=1) #this can be precomputed to save time
         interior_loss_trial1 = eps * val
         interior_loss_trial2 = beta * val
         
+        L = torch.zeros(precomputed_base.n_test_func)
+
         for n in range(1, precomputed_base.n_test_func + 1): 
             interior_loss_test1 = precomputed_base.get_dx(n)
             interior_loss_test2 = precomputed_base.get(n)
@@ -86,11 +86,13 @@ class NNErrorAD(NNError):
             val3 = int_rule.int_using_x_dx(y3, x_int, dx_int).item()
 
             interior_loss = val1 + val2 - val3
-            # update the final MSE loss 
-            divider = base_fun.divider(n) * self.divider
-            final_loss+= 1/(eps * divider)*interior_loss**2 
+            L[n-1] = interior_loss
 
-        return final_loss
+        G = precomputed_base.get_matrix()
+        final_loss = torch.matmul(torch.matmul(L.T, G), L)
+        final_loss = final_loss / self.divider
+
+        return final_loss.item()
     
     @classmethod
     def prepare_x(cls, n_points_error: int, device: torch.device = torch.device("cpu")):
@@ -114,7 +116,7 @@ class NNErrorAD(NNError):
         x = cls.prepare_x(params.n_points_error)
         x, dx = integration_rule_norm.prepare_x_dx(x)
         base_fun = BaseFun.from_params(params)
-        precomputed_base = precompute_base(base_fun, x, params.n_test_func)
+        precomputed_base = precompute_base(base_fun, x, params.eps, params.n_test_func)
         return cls(params.eps, 
                    params.n_points_error, 
                    precomputed_base, 
