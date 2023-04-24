@@ -18,13 +18,15 @@ class LossDelta(Loss):
          eps: float,
          Xd: float,
          precomputed_base: PrecomputedBase,
-         integration_rule: IntegrationRule
+         integration_rule: IntegrationRule,
+         divide_by_test: bool,
     ):
         self.x = x
         self.eps = eps
         self.Xd = Xd
         self.precomputed_base = precomputed_base
         self.integration_rule = integration_rule
+        self.divider = precomputed_base.n_test_func if divide_by_test else 1.0
 
 
     # Allows to call object as function
@@ -50,7 +52,7 @@ class LossDelta(Loss):
             interior_loss = int_rule.int_using_x_dx(interior_loss, x, dx).sum()
             interior_loss = interior_loss - base_fun(torch.tensor(Xd), n)
             # update the final MSE loss 
-            divider = base_fun.divider(n)
+            divider = base_fun.divider(n) * self.divider
             final_loss+= 1/(eps * divider)*interior_loss.pow(2) 
 
         boundary_xi = x[0].reshape(-1, 1) #first point = 0
@@ -71,4 +73,4 @@ class LossDelta(Loss):
         integration_rule = get_int_rule(params.integration_rule_loss)
         base_x, dx = integration_rule.prepare_x_dx(x)
         precomputed_base = precompute_base(base_fun, base_x, params.n_test_func)
-        return cls(x, params.eps, params.Xd, precomputed_base, integration_rule)
+        return cls(x, params.eps, params.Xd, precomputed_base, integration_rule, params.divide_by_test)

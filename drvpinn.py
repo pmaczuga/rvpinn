@@ -45,6 +45,9 @@ parser.add_argument("--integration-rule-norm", type=str,
 parser.add_argument("--integration-rule-error", type=str,
                     help='Integration rule for calculating error. ' 
                     'One of "trapz", "midpoint" or "simpson".')
+parser.add_argument("--divide-by-test", type=bool,
+                    help='Whether to divide loss (and norm) by number '
+                    'of test functions.')
 
 parser.add_argument("--atol", type=float)
 parser.add_argument("--rtol", type=float)

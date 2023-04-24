@@ -19,13 +19,16 @@ class NNErrorDelta(NNError):
                  n_points_error: int, 
                  precomputed_base: PrecomputedBase,
                  integration_rule_norm: IntegrationRule,
-                 integration_rule_error: IntegrationRule):
+                 integration_rule_error: IntegrationRule,
+                 divide_by_test: bool
+                 ):
         self.eps = eps
         self.Xd = Xd
         self.n_points_error = n_points_error
         self.precomputed_base = precomputed_base
         self.integration_rule_norm = integration_rule_norm
         self.integration_rule_error = integration_rule_error
+        self.divider = precomputed_base.n_test_func if divide_by_test else 1.0
 
     def error(self, pinn: PINN) -> float:
         eps = self.eps
@@ -82,7 +85,7 @@ class NNErrorDelta(NNError):
             interior_loss = interior_loss - base_fun(torch.tensor(Xd), n)
 
             # update the final MSE loss 
-            divider = base_fun.divider(n)
+            divider = base_fun.divider(n) * self.divider
             final_loss+= 1/(eps * divider)*interior_loss**2 
     
         return final_loss.item()
@@ -110,4 +113,6 @@ class NNErrorDelta(NNError):
                    params.n_points_error, 
                    precomputed_base, 
                    integration_rule_norm, 
-                   integration_rule_error)
+                   integration_rule_error,
+                   params.divide_by_test
+                   )

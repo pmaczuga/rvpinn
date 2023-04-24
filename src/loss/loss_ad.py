@@ -15,12 +15,14 @@ class LossAD(Loss):
          x: torch.Tensor,
          eps: float,
          precomputed_base: PrecomputedBase,
-         integration_rule: IntegrationRule
+         integration_rule: IntegrationRule,
+         divide_by_test: bool
     ):
         self.x = x
         self.eps = eps
         self.precomputed_base = precomputed_base
         self.integration_rule = integration_rule
+        self.divider = precomputed_base.n_test_func if divide_by_test else 1.0
 
 
     # Allows to call object as function
@@ -53,7 +55,7 @@ class LossAD(Loss):
             
             interior_loss = val1 + val2 - val3
             # update the final MSE loss 
-            divider = base_fun.divider(n)
+            divider = base_fun.divider(n) * self.divider
             final_loss+= 1.0 / (eps * divider) * interior_loss.sum().pow(2) 
 
 
@@ -75,4 +77,4 @@ class LossAD(Loss):
         integration_rule = get_int_rule(params.integration_rule_loss)
         base_x, dx = integration_rule.prepare_x_dx(x)
         precomputed_base = precompute_base(base_fun, base_x, params.n_test_func)
-        return cls(x, params.eps, precomputed_base, integration_rule)
+        return cls(x, params.eps, precomputed_base, integration_rule, params.divide_by_test)

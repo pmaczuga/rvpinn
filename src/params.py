@@ -51,6 +51,7 @@ class Params:
         self.integration_rule_loss  = self._getstr("integration_rule_loss", config, **kwargs)
         self.integration_rule_norm  = self._getstr("integration_rule_norm", config, **kwargs)
         self.integration_rule_error = self._getstr("integration_rule_error", config, **kwargs)
+        self.divide_by_test         = self._getboolean("divide_by_test", config, **kwargs)
         self.atol                   = self._getfloat("atol", config, **kwargs)
         self.rtol                   = self._getfloat("rtol", config, **kwargs)
         self.tag                    = self._getstr("tag", config, **kwargs)
