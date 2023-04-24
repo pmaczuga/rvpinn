@@ -19,7 +19,6 @@ class PrecomputedBase():
         self._vals = [base_fun(x, n) for n in range(1, n_test_func + 1)]
         self._dxs = [base_fun.dx(x, n) for n in range(1, n_test_func + 1)]
         self._matrix = self.base_fun.calculate_matrix(eps, n_test_func)
-        print(self._matrix)
 
     def get(self, n: int) -> torch.Tensor:
         return self._vals[n-1]
@@ -47,6 +46,8 @@ class BaseFun(ABC):
     def from_params(cls, params: Params) -> BaseFun:
         if params.test_func == "sin":
             return SinBase()
+        if params.test_func == "fem":
+            return FemBase(params.n_test_func)
         if params.test_func == "poly":
             return PolyBase(params.n_test_func)
         raise ValueError(f"Not supported test_func in params: {params.test_func}")
@@ -68,6 +69,43 @@ class SinBase(BaseFun):
             n = i+1
             matrix[i,i] = eps * (n*math.pi)**2 / 4.0
         return torch.inverse(matrix)
+
+class FemBase(BaseFun):
+    def __init__(self, N: int, log=True):
+        self.N = N
+
+    def __call__(self, x: torch.Tensor, n: int) -> torch.Tensor:
+        left0 = x <= self._tip_x(n-1)
+        left = torch.logical_and(x > self._tip_x(n-1), x <= self._tip_x(n))
+        right = torch.logical_and(x > self._tip_x(n), x <= self._tip_x(n+1))
+        right0 = x > self._tip_x(n+1)
+        left_y =   x * 1.0 / self._delta_x() + 1.0 / self._delta_x() - n + 1
+        right_y = -x * 1.0 / self._delta_x() - 1.0 / self._delta_x() + n + 1
+        return left0 * 0.0 + left * left_y + right * right_y + right0 * 0.0
+    
+    def dx(self, x: torch.Tensor, n: int) -> torch.Tensor:
+        left0 = x <= self._tip_x(n-1)
+        left = torch.logical_and(x > self._tip_x(n-1), x <= self._tip_x(n))
+        right = torch.logical_and(x > self._tip_x(n), x <= self._tip_x(n+1))
+        right0 = x > self._tip_x(n+1)
+        left_y =   x * 1.0 / self._delta_x() + 1.0 / self._delta_x() - n + 1
+        right_y = -x * 1.0 / self._delta_x() - 1.0 / self._delta_x() + n + 1
+        return left0 * 0.0 + left / self._delta_x() - right / self._delta_x() + right0 * 0.0
+    
+    def calculate_matrix(self, eps: float, n_test_func: int) -> torch.Tensor:
+        matrix = torch.zeros(n_test_func, n_test_func)
+        for i in range(n_test_func):
+            matrix[i, i] = eps * (1.0 / self._delta_x())**2 * self._delta_x() * 2
+        for i in range(n_test_func - 1):
+            matrix[i, i+1] = -1.0 / self._delta_x() * eps
+            matrix[i+1, i] = -1.0 / self._delta_x() * eps
+        return torch.inverse(matrix)
+    
+    def _tip_x(self, n) -> float:
+        return -1.0 + n*self._delta_x()
+    
+    def _delta_x(self) -> float:
+        return 2.0/(self.N+1)
 
 class PolyBase(BaseFun):
     def __init__(self, N: int, log=True):

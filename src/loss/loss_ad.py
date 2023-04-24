@@ -56,6 +56,7 @@ class LossAD(Loss):
             interior_loss = val1 + val2 - val3
             L[n-1] = interior_loss.sum()
 
+        # print(L)
         G = precomputed_base.get_matrix()
         final_loss = torch.matmul(torch.matmul(L.T, G), L)
         final_loss = final_loss / self.divider
