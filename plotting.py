@@ -16,6 +16,12 @@ from src.utils import get_tag_path
 
 matplotlib.rcParams['text.latex.preamble'] = [r'\usepackage{amsmath}']
 
+vpinn_c = "#0B33B5"
+analytical_c = "#D00000"
+loss_c = "orange"
+norm_c = "#58106a"
+error_c = "green"
+
 
 parser = argparse.ArgumentParser(
                     prog='DRVPINN',
@@ -66,11 +72,11 @@ matplotlib.rc('font', **font)
 # Result and exact solution
 ##########################################################################
 fig, ax = plt.subplots()
-ax.plot(x_draw.detach().cpu(), y_draw.detach().cpu(),'b-', label = 'DRVPINNs',linewidth = 2)
-ax.plot(x_draw, y_ana_np, 'r--', label="Analytical", linewidth=2)
+ax.plot(x_draw.detach().cpu(), y_draw.detach().cpu(),'-', color=vpinn_c, label = 'DRVPINNs',linewidth = 2)
+ax.plot(x_draw, y_ana_np, '--', color=analytical_c, label="Analytical", linewidth=2)
 ax.legend(loc='upper left')
-ax.set_xlabel(r" $x$ ", size = 22)
-ax.set_ylabel(r" $u$ ", size = 22)
+ax.set_xlabel(r" $x$ ", size=19)
+ax.set_ylabel(r" $u$ ", size=19)
 ax.set_title("Result and exact solution")
 save_fig(fig, tag, "result.png")
 
@@ -80,9 +86,11 @@ save_fig(fig, tag, "result.png")
 fig, ax = plt.subplots()
 pinn_dx = dfdx(pinn, x, order=1)
 exact_dx = analytical.dx(x)
-ax.plot(x_draw.detach().cpu(), pinn_dx.detach().cpu(),'b-', label = 'DRVPINN dx')
-ax.plot(x_draw.detach().cpu(), exact_dx.detach().cpu(),'r--', label='Analytical dx')
+ax.plot(x_draw.detach().cpu(), pinn_dx.detach().cpu(),'-', label = 'DRVPINN dx', color=vpinn_c)
+ax.plot(x_draw.detach().cpu(), exact_dx.detach().cpu(),'--', linewidth=2, label='Analytical dx', color=analytical_c)
 ax.set_title("Derivative of result and exact solution")
+ax.set_xlabel(r" $x$ ", size=19)
+ax.set_ylabel(r" $du/dx$ ", size=19)
 ax.legend(loc='lower left')#, fontsize='x-large')
 save_fig(fig, tag, "result-derivative.png")
 
@@ -107,42 +115,42 @@ pos_vec = np.array(pos_vec, dtype=int) - 1
 # Loss and norm
 ##########################################################################
 fig, ax = plt.subplots()
-ax.loglog(pos_vec, loss_vector[pos_vec],'b-',linewidth = 2, label="Loss")
-ax.loglog(pos_vec, norm_vector[pos_vec], 'r--', linewidth=2, label="Norm")
+ax.loglog(pos_vec, loss_vector[pos_vec],'-',linewidth = 2, label="Loss", color=loss_c)
+ax.loglog(pos_vec, norm_vector[pos_vec], '--', linewidth=2, label="Norm", color=norm_c)
 ax.legend()
-ax.set_title("Loss and norm", size = 24)
-ax.set_xlabel(r" Iterations ", size = 22)
-ax.set_ylabel(r" Loss ", size = 22)
+ax.set_title("Loss and norm")
+ax.set_xlabel(r" Iterations ")
+ax.set_ylabel(r" Value ")
 save_fig(fig, tag, "loss-and-norm.png")
 
 ##########################################################################
 # Loss without filter
 ##########################################################################
 fig, ax = plt.subplots()
-ax.loglog(epochs_vector, loss_vector,'b-',linewidth = 1, label="Loss")
-ax.legend()
-ax.set_title("Loss no filer", size = 24)
-ax.set_xlabel(r" Iterations ", size = 22)
-ax.set_ylabel(r" Loss ", size = 22)
+ax.loglog(epochs_vector, loss_vector,'-',linewidth = 1, label="Loss", color=loss_c)
+# ax.legend()
+ax.set_title("Loss no filer")
+ax.set_xlabel(r" Iterations ")
+ax.set_ylabel(r" Loss ")
 save_fig(fig, tag, "loss-no-filter.png")
 
 ##########################################################################
 # Error
 ##########################################################################
 fig, ax = plt.subplots()
-ax.loglog(pos_vec, error_vector[pos_vec], 'g-', linewidth=2, label="Error")
-ax.set_xlabel(r" Iterations ", size = 22)
-ax.set_ylabel(r" Error ", size = 22)
-ax.set_title("Error")
+ax.loglog(pos_vec, error_vector[pos_vec], '-', linewidth=2, label="Error", color=error_c)
+ax.set_xlabel(r" Iterations ")
+ax.set_ylabel(r" Error ")
+# ax.set_title("Error")
 save_fig(fig, tag, "error.png")
 
 ##########################################################################
 # Error no fiter
 ##########################################################################
 fig, ax = plt.subplots()
-ax.loglog(epochs_vector, error_vector, 'g-', linewidth=2, label="Error")
-ax.set_xlabel(r" Iterations ", size = 22)
-ax.set_ylabel(r" Error ", size = 22)
+ax.loglog(epochs_vector, error_vector, '-', linewidth=1, label="Error", color=error_c)
+ax.set_xlabel(r" Iterations ")
+ax.set_ylabel(r" Error ")
 ax.set_title("Error no filter")
 save_fig(fig, tag, "error-no-filter.png")
 
@@ -150,11 +158,12 @@ save_fig(fig, tag, "error-no-filter.png")
 # Error to sqrt(loss)
 ##########################################################################
 fig, ax = plt.subplots()
-ax.loglog(np.sqrt(loss_vector[pos_vec]), error_vector[pos_vec])
-ax.loglog(np.sqrt(loss_vector[pos_vec]), np.sqrt(loss_vector[pos_vec]))
-ax.set_xlabel(r" $\sqrt{Loss}$ ", size = 22)
-ax.set_ylabel(r" Error ", size = 22)
-ax.set_title(r"Error to $\sqrt{Loss}$")
+ax.loglog(np.sqrt(loss_vector[pos_vec]), error_vector[pos_vec], color=error_c, label="Error")
+ax.loglog(np.sqrt(loss_vector[pos_vec]), np.sqrt(loss_vector[pos_vec]), color=loss_c, label="$y=x$")
+ax.set_xlabel(r" $\sqrt{Loss}$ ")
+ax.set_ylabel(r" Error ")
+ax.legend(loc='upper left')#, fontsize='x-large')
+# ax.set_title(r"Error to $\sqrt{Loss}$")
 filename = f"{get_tag_path(tag)}/error.pt"
 save_fig(fig, tag, "error-to-sqrt-loss.png")
 

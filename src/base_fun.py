@@ -88,8 +88,6 @@ class FemBase(BaseFun):
         left = torch.logical_and(x > self._tip_x(n-1), x <= self._tip_x(n))
         right = torch.logical_and(x > self._tip_x(n), x <= self._tip_x(n+1))
         right0 = x > self._tip_x(n+1)
-        left_y =   x * 1.0 / self._delta_x() + 1.0 / self._delta_x() - n + 1
-        right_y = -x * 1.0 / self._delta_x() - 1.0 / self._delta_x() + n + 1
         return left0 * 0.0 + left / self._delta_x() - right / self._delta_x() + right0 * 0.0
     
     def calculate_matrix(self, eps: float, n_test_func: int) -> torch.Tensor:
