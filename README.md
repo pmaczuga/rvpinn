@@ -51,18 +51,12 @@ You can also do this:
 ```
 $ python3 drvpinn.py --help
 
-usage: DRVPINN [-h] [--tag TAG] [--epochs EPOCHS] [--layers LAYERS]
-               [--neurons-per-layer NEURONS_PER_LAYER]
-               [--learning-rate LEARNING_RATE]
-               [--use-best-pinn | --no-use-best-pinn] [--equation EQUATION]
-               [--test-func TEST_FUNC] [--eps EPS] [--Xd XD]
-               [--compute-error | --no-compute-error]
-               [--n-points-x N_POINTS_X] [--n-points-error N_POINTS_ERROR]
-               [--n-test-func N_TEST_FUNC]
-               [--integration-rule-loss INTEGRATION_RULE_LOSS]
-               [--integration-rule-norm INTEGRATION_RULE_NORM]
-               [--integration-rule-error INTEGRATION_RULE_ERROR] [--atol ATOL]
-               [--rtol RTOL] [--params PARAMS]
+usage: DRVPINN [-h] [--tag TAG] [--epochs EPOCHS] [--layers LAYERS] [--neurons-per-layer NEURONS_PER_LAYER]
+               [--learning-rate LEARNING_RATE] [--use-best-pinn | --no-use-best-pinn] [--equation EQUATION] [--test-func TEST_FUNC]
+               [--eps EPS] [--Xd XD] [--compute-error | --no-compute-error] [--n-points-x N_POINTS_X]
+               [--n-points-error N_POINTS_ERROR] [--n-test-func N_TEST_FUNC] [--integration-rule-loss INTEGRATION_RULE_LOSS]
+               [--integration-rule-norm INTEGRATION_RULE_NORM] [--integration-rule-error INTEGRATION_RULE_ERROR]
+               [--divide-by-test DIVIDE_BY_TEST] [--atol ATOL] [--rtol RTOL] [--params PARAMS]
 
 Runs the training of DRVPINN
 
@@ -75,35 +69,31 @@ options:
   --learning-rate LEARNING_RATE
   --use-best-pinn, --no-use-best-pinn
   --equation EQUATION, -e EQUATION
-                        Equation to use - either "delta" (Dirac delta on RHS)
-                        or "ad" (Advection-Diffusion)
+                        Equation to use - either "delta" (Dirac delta on RHS) or "ad" (Advection-Diffusion)
   --test-func TEST_FUNC
-                        Type of test functions - either "sin" or "poly"
+                        Type of test functions - one of "sin", "poly", "fem" or "mixed". "mixed" takes half of sin and half of fem.
+                        Number of fem can be changed like this: "mixed10" - 10 fem, rest is sin.
   --eps EPS
   --Xd XD
   --compute-error, --no-compute-error
-                        Whether to compute error in each iteration will
-                        influence performance
+                        Whether to compute error in each iteration will influence performance
   --n-points-x N_POINTS_X
                         Number of integration nodes
   --n-points-error N_POINTS_ERROR
-                        Number of integration nodes for computing error.
-                        Ideally greater than n_points_x
+                        Number of integration nodes for computing error. Ideally greater than n_points_x
   --n-test-func N_TEST_FUNC
                         Number of test functions
   --integration-rule-loss INTEGRATION_RULE_LOSS
-                        Integration rule for loss function. Either "trapz" or
-                        "midpoint.
+                        Integration rule for loss function. Either "trapz" or "midpoint.
   --integration-rule-norm INTEGRATION_RULE_NORM
-                        Integration rule for calculating norm. One of "trapz",
-                        "midpoint" or "simpson".
+                        Integration rule for calculating norm. One of "trapz", "midpoint" or "simpson".
   --integration-rule-error INTEGRATION_RULE_ERROR
-                        Integration rule for calculating error. One of
-                        "trapz", "midpoint" or "simpson".
+                        Integration rule for calculating error. One of "trapz", "midpoint" or "simpson".
+  --divide-by-test DIVIDE_BY_TEST
+                        Whether to divide loss (and norm) by number of test functions.
   --atol ATOL
   --rtol RTOL
-  --params PARAMS       Path to .ini file with parameters. Defaults to
-                        "params.ini" in current directory
+  --params PARAMS       Path to .ini file with parameters. Defaults to "params.ini" in current directory
 
 ```
 

@@ -3,8 +3,6 @@ from abc import ABC
 import math
 from sympy import *
 
-from typing import List
-import numpy as np
 import torch
 
 from src.params import Params
@@ -50,6 +48,14 @@ class BaseFun(ABC):
             return FemBase(params.n_test_func)
         if params.test_func == "poly":
             return PolyBase(params.n_test_func)
+        if params.test_func == "mixed":
+            N1 = int(math.ceil(params.n_test_func / 2))
+            N2 = params.n_test_func = N1
+            return MixedBase(N1, N2)
+        if params.test_func.startswith("mixed"):
+            import re
+            N2 = int(re.findall(r'\d+', params.test_func)[0])
+            return MixedBase(params.n_test_func - N2, N2)
         raise ValueError(f"Not supported test_func in params: {params.test_func}")
 
 
@@ -104,6 +110,43 @@ class FemBase(BaseFun):
     
     def _delta_x(self) -> float:
         return 2.0/(self.N+1)
+
+class MixedBase(BaseFun):
+    def __init__(self, N1: int, N2: int, log=True):
+        self.N1 = N1
+        self.N2 = N2
+        self.sin = SinBase()
+        self.fem = FemBase(N2)
+
+    def __call__(self, x: torch.Tensor, n: int) -> torch.Tensor:
+        if n <= self.N1:
+            return self.sin(x, n)
+        else:
+            return self.fem(x, n - self.N1) 
+    
+    def dx(self, x: torch.Tensor, n: int) -> torch.Tensor:
+        if n <= self.N1:
+            return self.sin.dx(x, n)
+        else:
+            return self.fem.dx(x, n - self.N1) 
+
+    def calculate_matrix(self, eps: float, n_test_func: int) -> torch.Tensor:
+        delta_x = self.fem._delta_x()
+        matrix = torch.zeros(n_test_func, n_test_func)
+        # sin
+        for i in range(n_test_func):
+            n = i+1
+            matrix[i,i] = eps * (n*math.pi)**2 / 4.0
+        # FEM
+        for i in range(self.N1, self.N2):
+            matrix[i, i] = eps * (1.0 / delta_x)**2 * delta_x * 2
+        for i in range(self.N1, self.N2 - 1):
+            matrix[i, i+1] = -1.0 / delta_x * eps
+            matrix[i+1, i] = -1.0 / delta_x * eps
+        # There should also be non zero values across sin and fem
+        # But this approximation should do
+        return torch.inverse(matrix)
+    
 
 class PolyBase(BaseFun):
     def __init__(self, N: int, log=True):

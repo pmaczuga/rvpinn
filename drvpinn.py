@@ -23,7 +23,9 @@ parser.add_argument('--equation', '-e', type=str,
                           'either "delta" (Dirac delta on RHS) '
                           'or "ad" (Advection-Diffusion)'))
 parser.add_argument('--test-func', type=str, 
-                    help='Type of test functions - either "sin" or "poly"')
+                    help='Type of test functions - one of "sin", "poly", "fem" or "mixed". '
+                         '"mixed" takes half of sin and half of fem. ' 
+                         'Number of fem can be changed like this: "mixed10" - 10 fem, rest is sin. ')
 parser.add_argument('--eps', type=float)
 parser.add_argument('--Xd', type=float)
 

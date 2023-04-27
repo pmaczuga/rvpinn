@@ -59,7 +59,7 @@ class NNErrorDelta(NNError):
         u2 = analytical.right_dx(x1)[0].item()
 
         up = up1 + up2
-        down = u1**2*(Xd - 1.0) + u2**2*(1.0 - Xd)
+        down = u1**2*(Xd + 1.0) + u2**2*(1.0 - Xd)
 
         return math.sqrt(up) / math.sqrt(down)
 
