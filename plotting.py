@@ -24,8 +24,8 @@ error_c = "green"
 
 
 parser = argparse.ArgumentParser(
-                    prog='RVPINN',
-                    description='Runs the training of DRVPINN')
+                    prog='SVPINN',
+                    description='Runs the training of SVPINN')
 parser.add_argument('--tag', type=str)
 args = parser.parse_args()
 
@@ -72,7 +72,7 @@ matplotlib.rc('font', **font)
 # Result and exact solution
 ##########################################################################
 fig, ax = plt.subplots()
-ax.plot(x_draw.detach().cpu(), y_draw.detach().cpu(),'-', color=vpinn_c, label = 'RVPINNs',linewidth = 2)
+ax.plot(x_draw.detach().cpu(), y_draw.detach().cpu(),'-', color=vpinn_c, label = 'SVPINN',linewidth = 2)
 ax.plot(x_draw, y_ana_np, '--', color=analytical_c, label="Analytical", linewidth=2)
 ax.legend(loc='upper left')
 ax.set_xlabel(r" $x$ ", size=19)
@@ -86,7 +86,7 @@ save_fig(fig, tag, "result.png")
 fig, ax = plt.subplots()
 pinn_dx = dfdx(pinn, x, order=1)
 exact_dx = analytical.dx(x)
-ax.plot(x_draw.detach().cpu(), pinn_dx.detach().cpu(),'-', label = 'RVPINN dx', color=vpinn_c)
+ax.plot(x_draw.detach().cpu(), pinn_dx.detach().cpu(),'-', label = 'SVPINN dx', color=vpinn_c)
 ax.plot(x_draw.detach().cpu(), exact_dx.detach().cpu(),'--', linewidth=2, label='Analytical dx', color=analytical_c)
 ax.set_title("Derivative of NN approximation and exact solution")
 ax.set_xlabel(r" $x$ ", size=19)
@@ -116,11 +116,11 @@ pos_vec = np.array(pos_vec, dtype=int) - 1
 ##########################################################################
 fig, ax = plt.subplots()
 ax.loglog(pos_vec, loss_vector[pos_vec],'-',linewidth = 2, label="Loss", color=loss_c)
-ax.loglog(pos_vec, norm_vector[pos_vec], '--', linewidth=2, label="Norm", color=norm_c)
-ax.legend()
-ax.set_title("Loss and norm")
+# ax.loglog(pos_vec, norm_vector[pos_vec], '--', linewidth=2, label="Norm", color=norm_c)
+# ax.legend()
+# ax.set_title("Loss and norm")
 ax.set_xlabel(r" Iterations ")
-ax.set_ylabel(r" Value ")
+ax.set_ylabel(r" Loss")
 save_fig(fig, tag, "loss-and-norm.png")
 
 ##########################################################################
