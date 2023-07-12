@@ -2,12 +2,14 @@ import argparse
 import math
 import os
 import matplotlib
+import mpltools.annotation as mpl
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import draw, figure, show
 import numpy as np
 import torch
-from src.analytical import AnalyticalDelta, analytical_from_params
+from src.analytical import AnalyticalAD, AnalyticalDelta, analytical_from_params
+from src.integration import MidpointInt, TrapzInt 
 
 from src.params import Params
 from src.io_utils import load_result
@@ -18,9 +20,9 @@ matplotlib.rcParams['text.latex.preamble'] = [r'\usepackage{amsmath}']
 
 vpinn_c = "#0B33B5"
 analytical_c = "#D00000"
-loss_c = "orange"
+loss_c = "darkorange"
 norm_c = "#58106a"
-error_c = "green"
+error_c = "darkgreen"
 
 
 parser = argparse.ArgumentParser(
@@ -37,6 +39,15 @@ def save_fig(fig: Figure, tag: str, filename: str) -> str:
     fig.savefig(filename, bbox_inches='tight', dpi=200)
     return filename
 
+def calculate_ana_norm(x, params: Params) -> float:
+    analytical = AnalyticalAD(params.eps)
+    ana = analytical.dx(x)
+    value = ana**2
+    int_rule = TrapzInt()
+    x, dx = int_rule.prepare_x_dx(x)
+    result = int_rule.int_using_x_dx(value, x, dx)
+    return np.sqrt(result.item() * params.eps)
+
 # Here you can set tag - that is directory inside results where the 
 # tag = "tmp"
 # Alternatively you can take tag from params.ini in root:
@@ -48,6 +59,7 @@ loss_vector = result.loss
 error_vector = result.error
 norm_vector = result.norm
 
+
 x_domain = [-1., 1.0]; n_points_x=1000
 x_raw = torch.linspace(x_domain[0], x_domain[1], steps=n_points_x)
 x_raw.requires_grad_()
@@ -55,6 +67,8 @@ x = x_raw.reshape(-1, 1)
 x_draw = x.flatten().detach()
 y_draw = f(pinn, x).flatten()
 #y_ana = (1-torch.exp((x_draw-1)/eps))/(1-np.exp(-1/eps)) + x_draw -1
+
+analytical_norm = calculate_ana_norm(x_raw, params)
 
 # y_ana_np1 = 1/params.eps*(1-Xd)*(xnp1+1) #(1-np.exp((xnp-1)/eps))/(1-np.exp(-1/eps)) + xnp - 1#(np.exp(1/eps)-np.exp((xnp)/eps))/(np.exp(1/eps) -1)
 # y_ana_np2 = 1/params.eps*(Xd+1)*(1-xnp2)
@@ -74,10 +88,10 @@ matplotlib.rc('font', **font)
 fig, ax = plt.subplots()
 ax.plot(x_draw.detach().cpu(), y_draw.detach().cpu(),'-', color=vpinn_c, label = 'SVPINN',linewidth = 2)
 ax.plot(x_draw, y_ana_np, '--', color=analytical_c, label="Analytical", linewidth=2)
-ax.legend(loc='upper left')
+ax.legend(loc='upper left', labelcolor='linecolor')
 ax.set_xlabel(r" $x$ ")
 ax.set_ylabel(r" $u$ ")
-ax.set_title("NN approximation and exact solution")
+# ax.set_title("NN approximation and exact solution")
 save_fig(fig, tag, "result.png")
 save_fig(fig, tag, "result.pdf")
 
@@ -114,25 +128,18 @@ pos_vec = np.array(pos_vec, dtype=int) - 1
 ##########################################################################
 
 ##########################################################################
-# Loss
+# Loss and error
 ##########################################################################
 fig, ax = plt.subplots()
-ax.loglog(pos_vec, loss_vector[pos_vec],'-',linewidth = 1.5, label="Loss", color=loss_c)
-# ax.loglog(pos_vec, norm_vector[pos_vec], '--', linewidth=2, label="Norm", color=norm_c)
-# ax.legend()
-# ax.set_title("Loss and norm")
+loss_label = r"$\frac{\sqrt{{\cal L \rm}_r^\phi(u_\theta)}}{\|u\|_U}$"
+norm_label = r"$\frac{\|\phi\|_V}{\|u\|_U}$"
+error_label = r"$\frac{\|u - u_\theta\|_U}{\|u\|_U}$"
+ax.loglog(pos_vec, torch.sqrt(loss_vector[pos_vec]) / analytical_norm,'-',linewidth = 1.5, label=loss_label, color=loss_c)
+ax.loglog(pos_vec, torch.sqrt(norm_vector[pos_vec]) / analytical_norm, '-.', linewidth=2, label=norm_label, color=norm_c)
+ax.loglog(pos_vec, error_vector[pos_vec], '--', linewidth=1.5, label=error_label, color=error_c)
+ax.legend(loc='lower left', labelcolor='linecolor')
 ax.set_xlabel(r" Iterations ")
-ax.set_ylabel(r" Loss", color=loss_c)
-# save_fig(fig, tag, "loss-and-norm.png")
-
-##########################################################################
-# Error
-##########################################################################
-ax = ax.twinx()
-ax.loglog(pos_vec, error_vector[pos_vec], '-', linewidth=1.5, label="Error", color=error_c)
-# ax.set_xlabel(r" Iterations ")
-ax.set_ylabel(r" Error ", color=error_c)
-# ax.set_title("Error")
+ax.set_ylabel(r" Error (estimates)")
 save_fig(fig, tag, "error-and-loss.png")
 save_fig(fig, tag, "error-and-loss.pdf")
 
@@ -163,11 +170,14 @@ save_fig(fig, tag, "error-no-filter.pdf")
 # Error to sqrt(loss)
 ##########################################################################
 fig, ax = plt.subplots()
+level = pos_vec[int(np.floor(len(pos_vec) * 0.08))]
 ax.loglog(np.sqrt(loss_vector[pos_vec]), error_vector[pos_vec], color=error_c, label="Error")
-ax.loglog(np.sqrt(loss_vector[pos_vec]), np.sqrt(loss_vector[pos_vec]), color=loss_c, label="$y=x$")
-ax.set_xlabel(r" $\sqrt{Loss}$ ")
-ax.set_ylabel(r" Error ")
-ax.legend(loc='upper left')#, fontsize='x-large')
+mpl.slope_marker((loss_vector[level]**(1/2), 0.6*error_vector[level]), (1, 1), \
+ax=ax, invert=False, poly_kwargs={'facecolor': 'white',
+                                    'edgecolor':'black'})
+# ax.loglog(np.sqrt(loss_vector[pos_vec]), np.sqrt(loss_vector[pos_vec]), color=loss_c, label="$y=x$")
+ax.set_xlabel(r"$\sqrt{Loss}$")
+ax.set_ylabel(r"Relative Error ")
 # ax.set_title(r"Error to $\sqrt{Loss}$")
 filename = f"{get_tag_path(tag)}/error.pt"
 save_fig(fig, tag, "error-to-sqrt-loss.png")
