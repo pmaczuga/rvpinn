@@ -39,6 +39,26 @@ class AnalyticalAD(Analytical):
     def from_params(cls, params: Params) -> AnalyticalAD:
         return cls(params.eps)
     
+class AnalyticalSmooth(Analytical):
+    """Analytical solution to Diffusion equation
+    
+    Instances of this class can be called as functions"""
+    
+    def __init__(self):
+        pass
+
+    def __call__(self, x: torch.Tensor) -> torch.Tensor:
+        """Solution for given x's"""
+        return torch.sin(torch.pi * (x+1))
+    
+    def dx(self, x: torch.Tensor) -> torch.Tensor:
+        """Derivative of the solution"""
+        return torch.pi * torch.cos(torch.pi * (x+1))
+
+    @classmethod
+    def from_params(cls, params: Params) -> AnalyticalSmooth:
+        return cls()
+    
 
 class AnalyticalDelta(Analytical):
     """Analytical solution to PDE: $ eps * u'' = delta_x0 $
@@ -92,4 +112,6 @@ def analytical_from_params(params: Params) -> Analytical:
         return AnalyticalAD(params.eps)
     if params.equation == "delta":
         return AnalyticalDelta(params.eps, params.Xd)
+    if params.equation == "smooth":
+        return AnalyticalSmooth()
     raise ValueError(f"Wrong equation in params: {params.equation}")
