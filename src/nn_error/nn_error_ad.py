@@ -94,20 +94,20 @@ class NNErrorAD(NNError):
 
         return final_loss.item()
     
-    @classmethod
-    def prepare_x(cls, n_points_error: int, device: torch.device = torch.device("cpu")):
+    # @classmethod
+    # def prepare_x(cls, n_points_error: int, device: torch.device = torch.device("cpu")):
 
-        # NOTE: 4 lines below are currently not used
-        # When eps = 0.1, p is about 3
-        # When eps = 0.01, p is about 6
-        # Condition is to make it at least 1
-        # p = -np.log2(self.eps) if self.eps < 0.5 else 1
+    #     # NOTE: 4 lines below are currently not used
+    #     # When eps = 0.1, p is about 3
+    #     # When eps = 0.01, p is about 6
+    #     # Condition is to make it at least 1
+    #     # p = -np.log2(self.eps) if self.eps < 0.5 else 1
 
-        x = right_centered_distribution(-1.0, 1.0, n_points_error, p=1.5)
-        x = x.reshape(-1, 1).to(device)
-        x.requires_grad = True
+    #     x = right_centered_distribution(-1.0, 1.0, n_points_error, p=1.5)
+    #     x = x.reshape(-1, 1).to(device)
+    #     x.requires_grad = True
 
-        return x
+    #     return x
     
     @classmethod
     def from_params(cls, params: Params) -> NNErrorAD:
