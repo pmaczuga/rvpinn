@@ -1,5 +1,5 @@
 import unittest
-from svpinn import get_params, parser
+from rvpinn import get_params, parser
 
 class TestClArgs(unittest.TestCase):
 

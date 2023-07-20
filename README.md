@@ -1,16 +1,16 @@
-# SVPINN
+# RVPINN
 
 ## Running
 
 For running there are only 3 important files:
 - `params.ini` - holds all the parameters, like which equation to run, eps, Xd, and so on...
-- `svpinn.py` - runs the training and saves results
-- `plotting.py` - plots the results acquired by running `svpinn.py`
+- `rvpinn.py` - runs the training and saves results
+- `plotting.py` - plots the results acquired by running `rvpinn.py`
 
 All those files run just like that, taking all the arguments from `params.ini`
 
 ```
-$ python3 svpinn.py
+$ python3 rvpinn.py
 $ python3 plotting.py
 ```
 
@@ -27,16 +27,16 @@ And additionally, if `compute_error = True`:
 
 ### Command line args
 
-File `svpinn.py` also takes arguments that allow to override all the parameters. It is sometimes more convenient and mostly useful
+File `rvpinn.py` also takes arguments that allow to override all the parameters. It is sometimes more convenient and mostly useful
 for setting `tag` and `equation`.
 
 ```
-$ python3 svpinn --tag ad_result --equation ad
+$ python3 rvpinn --tag ad_result --equation ad
 ```
 
 `--equation` can be shortened to `-e`:
 ```
-# python3 svpinn --tag ad_result -e ad
+# python3 rvpinn --tag ad_result -e ad
 ```
 
 File `plotting.py` only takes one argument: `--tag`. 
@@ -49,16 +49,16 @@ $ python3 plotting.py --tag ad_result
 
 You can also do this:
 ```
-$ python3 svpinn.py --help
+$ python3 rvpinn.py --help
 
-usage: SVPINN [-h] [--tag TAG] [--epochs EPOCHS] [--layers LAYERS] [--neurons-per-layer NEURONS_PER_LAYER]
+usage: RVPINN [-h] [--tag TAG] [--epochs EPOCHS] [--layers LAYERS] [--neurons-per-layer NEURONS_PER_LAYER]
                [--learning-rate LEARNING_RATE] [--use-best-pinn | --no-use-best-pinn] [--equation EQUATION] [--test-func TEST_FUNC]
                [--eps EPS] [--Xd XD] [--compute-error | --no-compute-error] [--n-points-x N_POINTS_X]
                [--n-points-error N_POINTS_ERROR] [--n-test-func N_TEST_FUNC] [--integration-rule-loss INTEGRATION_RULE_LOSS]
                [--integration-rule-norm INTEGRATION_RULE_NORM] [--integration-rule-error INTEGRATION_RULE_ERROR]
                [--divide-by-test DIVIDE_BY_TEST] [--atol ATOL] [--rtol RTOL] [--params PARAMS]
 
-Runs the training of SVPINN
+Runs the training of RVPINN
 
 options:
   -h, --help            show this help message and exit
@@ -99,7 +99,7 @@ options:
 
 ## Interesting files
 - `pinn.py` - definition of the neural network
-- `train.py` - training of the SVPINN, returns vectors of loss, norm and error to vectors
+- `train.py` - training of the RVPINN, returns vectors of loss, norm and error to vectors
 - `analytical.py` - analytical solutions for both equations
 - `loss/loss_ad.py` - loss function for Advection-Diffusion equation
 - `loss/loss_delta` - loss function for equation with Dirac delta on RHS

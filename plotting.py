@@ -26,8 +26,8 @@ error_c = "darkgreen"
 
 
 parser = argparse.ArgumentParser(
-                    prog='SVPINN',
-                    description='Runs the training of SVPINN')
+                    prog='RVPINN',
+                    description='Runs the training of RVPINN')
 parser.add_argument('--tag', type=str)
 args = parser.parse_args()
 
@@ -88,7 +88,7 @@ matplotlib.rc('font', **font)
 # Result and exact solution
 ##########################################################################
 fig, ax = plt.subplots()
-ax.plot(x_draw.detach().cpu(), y_draw.detach().cpu(),'-', color=vpinn_c, label = 'SVPINN',linewidth = 2)
+ax.plot(x_draw.detach().cpu(), y_draw.detach().cpu(),'-', color=vpinn_c, label = 'RVPINN',linewidth = 2)
 ax.plot(x_draw, y_ana_np, '--', color=analytical_c, label="Analytical", linewidth=2)
 ax.legend(loc='upper left', labelcolor='linecolor')
 ax.set_xlabel(r" $x$ ")
@@ -103,7 +103,7 @@ save_fig(fig, tag, "result.pdf")
 fig, ax = plt.subplots()
 pinn_dx = dfdx(pinn, x, order=1)
 exact_dx = analytical.dx(x)
-ax.plot(x_draw.detach().cpu(), pinn_dx.detach().cpu(),'-', label = 'SVPINN dx', color=vpinn_c)
+ax.plot(x_draw.detach().cpu(), pinn_dx.detach().cpu(),'-', label = 'RVPINN dx', color=vpinn_c)
 ax.plot(x_draw.detach().cpu(), exact_dx.detach().cpu(),'--', linewidth=2, label='Analytical dx', color=analytical_c)
 ax.set_title("Derivative of NN approximation and exact solution")
 ax.set_xlabel(r" $x$ ")
