@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from matplotlib.pyplot import draw, figure, show
 import numpy as np
 import torch
-from src.analytical import AnalyticalAD, AnalyticalDelta, analytical_from_params
+from src.analytical import AnalyticalAD, AnalyticalDelta, AnalyticalSmooth, analytical_from_params
 from src.integration import MidpointInt, TrapzInt 
 
 from src.params import Params
@@ -40,13 +40,15 @@ def save_fig(fig: Figure, tag: str, filename: str) -> str:
     return filename
 
 def calculate_ana_norm(x, params: Params) -> float:
-    analytical = AnalyticalAD(params.eps)
+    x = torch.linspace(-1, 1, 4000)
+    int_rule = TrapzInt() if params.integration_rule_error == "trapz" else MidpointInt()
+    x, dx = int_rule.prepare_x_dx(x)
+    analytical = analytical_from_params(params)
+    eps = 1.0 if params.equation == "smooth" else params.eps
     ana = analytical.dx(x)
     value = ana**2
-    int_rule = TrapzInt()
-    x, dx = int_rule.prepare_x_dx(x)
     result = int_rule.int_using_x_dx(value, x, dx)
-    return np.sqrt(result.item() * params.eps)
+    return np.sqrt(result.item() * eps)
 
 # Here you can set tag - that is directory inside results where the 
 # tag = "tmp"
