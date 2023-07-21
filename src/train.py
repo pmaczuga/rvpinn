@@ -1,4 +1,5 @@
 import copy
+from typing import Union
 import numpy as np
 import torch
 from src.nn_error import NNError
@@ -16,7 +17,7 @@ def train_model(
     atol: float = 0.0001,
     rtol: float = 0.0001,
     best: bool = False,
-    nn_error: NNError | None = None
+    nn_error: Union[NNError, None] = None
 ) -> TrainResult:
 
     optimizer = torch.optim.Adam(pinn.parameters(), lr=learning_rate)
