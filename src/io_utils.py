@@ -1,6 +1,6 @@
 import os
 import shutil
-from typing import Tuple
+from typing import Tuple, Union
 import torch
 import numpy as np
 
@@ -66,7 +66,7 @@ def load_loss(params: Params) -> torch.Tensor:
     filename = f"{get_tag_path(params.tag)}/loss.pt"
     return torch.load(filename)
 
-def load_error(params: Params) -> torch.Tensor | None:
+def load_error(params: Params) -> Union[torch.Tensor, None]:
     """Load error vector instance from directory 'results/{tag}'
     
     `tag` is extracted from params
@@ -76,7 +76,7 @@ def load_error(params: Params) -> torch.Tensor | None:
         return torch.load(filename)
     return None
 
-def load_norm(params: Params) -> torch.Tensor | None:
+def load_norm(params: Params) -> Union[torch.Tensor, None]:
     """Load norm vector instance from directory 'results/{tag}'
     
     `tag` is extracted from params

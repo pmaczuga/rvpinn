@@ -1,3 +1,4 @@
+from typing import Union
 import numpy as np
 import torch
 
@@ -25,8 +26,8 @@ def right_centered_distribution(start: float,
 class TrainResult:
    def __init__(self, 
                 loss: torch.Tensor, 
-                error: torch.Tensor | None = None,
-                norm: torch.Tensor | None = None):
+                error: Union[torch.Tensor, None] = None,
+                norm: Union[torch.Tensor, None] = None):
       self.loss = loss
       self.error = error
       self.norm = norm
