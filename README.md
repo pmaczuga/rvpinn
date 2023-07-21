@@ -1,5 +1,13 @@
 # RVPINN
 
+## Dependenices
+
+- `python 3.9` or higher
+- `pytorch`
+- `numpy`
+- `scipy`
+- `sympy`
+
 ## Running
 
 For running there are only 3 important files:
