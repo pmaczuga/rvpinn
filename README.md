@@ -6,7 +6,6 @@
 - `pytorch`
 - `numpy`
 - `scipy`
-- `sympy`
 
 For plotting additionally:
 - installed `latex`
@@ -64,15 +63,15 @@ $ python3 plotting.py --tag ad_result
 You can also do this:
 ```
 $ python3 rvpinn.py --help
+usage: DRVPINN [-h] [--tag TAG] [--epochs EPOCHS] [--layers LAYERS] [--neurons-per-layer NEURONS_PER_LAYER]
+               [--learning-rate LEARNING_RATE] [--use-best-pinn | --no-use-best-pinn] [--equation EQUATION]
+               [--test-func TEST_FUNC] [--eps EPS] [--Xd XD] [--compute-error | --no-compute-error]
+               [--n-points-x N_POINTS_X] [--n-points-error N_POINTS_ERROR] [--n-test-func N_TEST_FUNC]
+               [--integration-rule-loss INTEGRATION_RULE_LOSS] [--integration-rule-norm INTEGRATION_RULE_NORM]
+               [--integration-rule-error INTEGRATION_RULE_ERROR] [--divide-by-test DIVIDE_BY_TEST] [--atol ATOL]
+               [--rtol RTOL] [--params PARAMS]
 
-usage: RVPINN [-h] [--tag TAG] [--epochs EPOCHS] [--layers LAYERS] [--neurons-per-layer NEURONS_PER_LAYER]
-               [--learning-rate LEARNING_RATE] [--use-best-pinn | --no-use-best-pinn] [--equation EQUATION] [--test-func TEST_FUNC]
-               [--eps EPS] [--Xd XD] [--compute-error | --no-compute-error] [--n-points-x N_POINTS_X]
-               [--n-points-error N_POINTS_ERROR] [--n-test-func N_TEST_FUNC] [--integration-rule-loss INTEGRATION_RULE_LOSS]
-               [--integration-rule-norm INTEGRATION_RULE_NORM] [--integration-rule-error INTEGRATION_RULE_ERROR]
-               [--divide-by-test DIVIDE_BY_TEST] [--atol ATOL] [--rtol RTOL] [--params PARAMS]
-
-Runs the training of RVPINN
+Runs the training of DRVPINN
 
 options:
   -h, --help            show this help message and exit
@@ -85,8 +84,8 @@ options:
   --equation EQUATION, -e EQUATION
                         Equation to use - either "delta" (Dirac delta on RHS) or "ad" (Advection-Diffusion)
   --test-func TEST_FUNC
-                        Type of test functions - one of "sin", "poly", "fem" or "mixed". "mixed" takes half of sin and half of fem.
-                        Number of fem can be changed like this: "mixed10" - 10 fem, rest is sin.
+                        Type of test functions - one of "sin", "fem" or "mixed". "mixed" takes half of sin and
+                        half of fem. Number of fem can be changed like this: "mixed10" - 10 fem, rest is sin.
   --eps EPS
   --Xd XD
   --compute-error, --no-compute-error

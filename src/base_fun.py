@@ -1,7 +1,6 @@
 from __future__ import annotations
 from abc import ABC
 import math
-from sympy import *
 
 import torch
 
@@ -46,8 +45,6 @@ class BaseFun(ABC):
             return SinBase()
         if params.test_func == "fem":
             return FemBase(params.n_test_func)
-        if params.test_func == "poly":
-            return PolyBase(params.n_test_func)
         if params.test_func == "mixed":
             N1 = int(math.ceil(params.n_test_func / 2))
             N2 = params.n_test_func = N1
@@ -147,62 +144,3 @@ class MixedBase(BaseFun):
         # But this approximation should do
         return torch.inverse(matrix)
     
-
-class PolyBase(BaseFun):
-    def __init__(self, N: int, log=True):
-        self.log = log
-        if log:
-            print("Generating polynomial base. Hold tight...")
-        base, base_norm = self._gram_schmidt(N)
-        self.fs = [self._to_lambda(sym) for sym in base_norm]
-        self.dxs = [self._to_lambda(diff(sym)) for sym in base_norm]
-
-    def __call__(self, x: torch.Tensor, n: int) -> torch.Tensor:
-        return self.fs[n-1](x)      # n starts at 1
-    
-    def dx(self, x: torch.Tensor, n: int) -> torch.Tensor:
-        return self.dxs[n-1](x)     # n starts at 1
-    
-    def divider(self, n: int) -> float:
-        return 1.0                  # Orthonormal
-
-    def calculate_matrix(self, n_test_func: int) -> torch.Tensor:
-        matrix = torch.zeros(n_test_func, n_test_func)
-        for i in range(n_test_func):
-            matrix[i,i] = 1.0
-        return torch.inverse(matrix)
-
-    def _inner_prod(self, u,v,x=symbols('x')):
-        return integrate(diff(u,x)*diff(v,x), (x, -1, 1))
-
-    def _proj_u(self, u,v):
-        return self._inner_prod(u,v)/(self._inner_prod(u,u))*u
-
-    def _gram_schmidt(self, N: int):
-        x = symbols('x')
-        basis = []
-        basis_norm = []
-
-        basis.append(factor(x**2-1))
-        basis_norm.append(expand(basis[0]/sqrt(self._inner_prod(basis[0],basis[0]))))
-
-        for n in range(1,N):
-
-            vk = x*basis[n-1]
-
-            uk = 1*vk
-
-            for j in range(n):
-
-                uk -= self._proj_u(basis[j],vk)
-            basis.append(expand(uk))
-            basis_norm.append(expand(uk/sqrt(self._inner_prod(uk,uk))))
-            if self.log and (n+1)%10 == 0:
-                print(f"\t{n+1}/{N}")
-
-        return basis, basis_norm
-
-    def _to_lambda(self, sym):
-        proper_sqrt = str(sym).replace("sqrt", "math.sqrt")
-        with_lambda = f"lambda x: {proper_sqrt}"
-        return eval(with_lambda)
