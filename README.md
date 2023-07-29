@@ -1,12 +1,18 @@
 # RVPINN
 
-## Dependenices
+## Requirements
 
 - `python 3.9` or higher
 - `pytorch`
 - `numpy`
 - `scipy`
 - `sympy`
+
+For plotting additionally:
+- installed `latex`
+- `matplotlib`
+- `mpltools`
+
 
 ## Running
 
