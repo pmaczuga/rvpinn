@@ -173,12 +173,12 @@ save_fig(fig, tag, "error-no-filter.pdf")
 ##########################################################################
 fig, ax = plt.subplots()
 level = pos_vec[int(np.floor(len(pos_vec) * 0.08))]
-ax.loglog(np.sqrt(loss_vector[pos_vec]), error_vector[pos_vec], color=error_c, label="Error")
+ax.loglog(np.sqrt(loss_vector[pos_vec]) / analytical_norm, error_vector[pos_vec], color=error_c, label="Error")
 mpl.slope_marker((loss_vector[level]**(1/2), 0.6*error_vector[level]), (1, 1), \
 ax=ax, invert=False, poly_kwargs={'facecolor': 'white',
                                     'edgecolor':'black'})
 # ax.loglog(np.sqrt(loss_vector[pos_vec]), np.sqrt(loss_vector[pos_vec]), color=loss_c, label="$y=x$")
-ax.set_xlabel(r"$\sqrt{Loss}$")
+ax.set_xlabel(r"Relative $\sqrt{Loss}$")
 ax.set_ylabel(r"Relative Error ")
 # ax.set_title(r"Error to $\sqrt{Loss}$")
 filename = f"{get_tag_path(tag)}/error.pt"
