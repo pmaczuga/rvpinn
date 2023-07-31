@@ -59,34 +59,52 @@ class NNErrorAD(NNError):
         base_fun = precomputed_base.base_fun
         device = pinn.get_device()
         x = self.prepare_x(self.n_points_error, device)
-        x, dx = int_rule.prepare_x_dx(x)
 
         beta = 1
-    
-        val = dfdx(pinn, x, order=1) #this can be precomputed to save time
-        interior_loss_trial1 = eps * val
-        interior_loss_trial2 = beta * val
-        
+
         L = torch.zeros(precomputed_base.n_test_func)
 
         for n in range(1, precomputed_base.n_test_func + 1): 
-            interior_loss_test1 = precomputed_base.get_dx(n)
-            interior_loss_test2 = precomputed_base.get(n)
-            inte1 = interior_loss_trial1.mul(interior_loss_test1)
-            inte2 = interior_loss_trial2.mul(interior_loss_test2)
 
-            x_int = x.detach().flatten().double()
-            dx_int = dx.detach().flatten().double()
-            y1 = inte1.detach().flatten().double()
-            y2 = inte2.detach().flatten().double()
-            y3 = interior_loss_test2.detach().flatten().double()
+            n_points = int(np.ceil(torch.numel(x) / precomputed_base.n_test_func))
 
-            val1 = int_rule.int_using_x_dx(y1, x_int, dx_int).item()
-            val2 = int_rule.int_using_x_dx(y2, x_int, dx_int).item()
-            val3 = int_rule.int_using_x_dx(y3, x_int, dx_int).item()
+            left  = base_fun._tip_x(n-1)
+            mid   = base_fun._tip_x(n)
+            right = base_fun._tip_x(n+1)
 
-            interior_loss = val1 + val2 - val3
-            L[n-1] = interior_loss
+            x_left  = torch.linspace(left, mid,  n_points, requires_grad=True).reshape(-1, 1)
+            x_right = torch.linspace(mid, right, n_points, requires_grad=True).reshape(-1, 1)
+
+            val_left = dfdx(pinn, x_left, order=1) 
+            val_right = dfdx(pinn, x_right, order=1) 
+
+            trial1_left  = eps * val_left
+            trial1_right = eps * val_right
+            trial2_left  = beta * val_left
+            trial2_right = beta * val_right
+
+            base_left  = base_fun(x_left,  n)
+            base_right = base_fun(x_right, n)
+            base_dx_left  = torch.full((n_points,),  1.0 / base_fun._delta_x(), requires_grad=True).reshape(-1, 1)
+            base_dx_right = torch.full((n_points,), -1.0 / base_fun._delta_x(), requires_grad=True).reshape(-1, 1)
+
+            inte1_left  = trial1_left.mul(base_dx_left)
+            inte1_right = trial1_right.mul(base_dx_right)
+            inte2_left  = trial2_left.mul(base_left)
+            inte2_right  = trial2_right.mul(base_right)
+
+            x_left, dx_left   = int_rule.prepare_x_dx(x_left)
+            x_right, dx_right = int_rule.prepare_x_dx(x_right)
+
+            val1_left = int_rule.int_using_x_dx(inte1_left, x_left, dx_left)
+            val1_right = int_rule.int_using_x_dx(inte1_right, x_right, dx_right)
+            val2_left = int_rule.int_using_x_dx(inte2_left, x_left, dx_left)
+            val2_right = int_rule.int_using_x_dx(inte2_right, x_right, dx_right)
+            val3_left = int_rule.int_using_x_dx(base_left, x_left, dx_left)
+            val3_right = int_rule.int_using_x_dx(base_right, x_right, dx_right)
+            
+            interior_loss = (val1_left + val1_right) + (val2_left + val2_right) - (val3_left + val3_right)
+            L[n-1] = interior_loss.sum()
 
         G = precomputed_base.get_matrix()
         final_loss = torch.matmul(torch.matmul(L.T, G), L)
