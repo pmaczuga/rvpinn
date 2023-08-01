@@ -27,3 +27,12 @@ class Loss(ABC):
 
     def __call__(self, pinn: PINN) -> torch.Tensor:
         raise NotImplementedError()
+
+    def pde_loss(self, pinn: PINN) -> torch.Tensor:
+        """PDE loss without boundary conditions"""
+        raise NotImplementedError()
+
+    def boundary_loss(self, pinn: PINN) -> torch.Tensor:
+        """Loss based only on boundary conditions"""
+        raise NotImplementedError()
+    

@@ -2,7 +2,7 @@ import copy
 from typing import Union
 import numpy as np
 import torch
-from src.nn_error import NNError
+from src.loss.nn_error import NNError
 
 from src.pinn import PINN
 from src.loss.loss import Loss
@@ -17,7 +17,8 @@ def train_model(
     atol: float = 0.0001,
     rtol: float = 0.0001,
     best: bool = False,
-    nn_error: Union[NNError, None] = None
+    nn_error: Union[NNError, None] = None,
+    nn_norm: Union[Loss, None] = None
 ) -> TrainResult:
 
     optimizer = torch.optim.Adam(pinn.parameters(), lr=learning_rate)
@@ -35,7 +36,8 @@ def train_model(
         try:
           if nn_error:
             error_vector[epoch] = nn_error.error(pinn)
-            norm_vector[epoch] = nn_error.norm(pinn)
+          if nn_norm:
+            norm_vector[epoch] = float(nn_norm.pde_loss(pinn))
           loss: torch.Tensor = loss_fn(pinn)
           loss_vector[epoch] = float(loss)
           optimizer.zero_grad()

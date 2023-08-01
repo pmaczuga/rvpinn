@@ -1,9 +1,8 @@
 import torch
-from src.loss.factory import loss_from_params
+from src.loss.factory import loss_from_params, norm_from_params, nn_error_from_params
 from src.io_utils import save_result
 from src.pinn import PINN
 from src.train import train_model
-from src.nn_error import nn_error_from_params
 
 from src.utils import *
 from src.params import Params
@@ -18,7 +17,7 @@ def run(params: Params, device: torch.device):
     pinn = PINN(params.layers, params.neurons_per_layer).to(device)
 
     # train the PINN
-    loss_fn = loss_from_params(x, params)
+    loss_fn = loss_from_params(params, device)
     result = train_model(
         pinn, 
         loss_fn=loss_fn, 
@@ -27,7 +26,8 @@ def run(params: Params, device: torch.device):
         atol = params.atol, 
         rtol = params.rtol, 
         best = params.use_best_pinn,
-        nn_error = nn_error_from_params(params) if params.compute_error else None
+        nn_error = nn_error_from_params(params) if params.compute_error else None,
+        nn_norm = norm_from_params(params, device) if params.compute_error else None
     )
 
     loss_vector = result.loss

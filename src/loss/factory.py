@@ -1,4 +1,9 @@
 import torch
+from src.loss.nn_error.nn_error import NNError
+from src.loss.nn_error.nn_error_ad import NNErrorAD
+from src.loss.nn_error.nn_error_delta import NNErrorDelta
+from src.loss.nn_error.nn_error_smooth import NNErrorSmooth
+from src.loss.norm import NormAD, NormDelta, NormSmooth
 from src.loss.loss_smooth import LossSmooth
 from src.loss.loss import Loss
 from src.loss.loss_ad import LossAD
@@ -6,11 +11,29 @@ from src.loss.loss_delta import LossDelta
 from src.params import Params
 
 
-def loss_from_params(x: torch.Tensor, params: Params) -> Loss:
+def loss_from_params(params: Params, device: torch.device) -> Loss:
     if params.equation == "ad":
-        return LossAD.from_params(x, params)
+        return LossAD.from_params(params, device)
     if params.equation == "delta":
-        return LossDelta.from_params(x, params)
+        return LossDelta.from_params(params, device)
     if params.equation == "smooth":
-        return LossSmooth.from_params(x, params)
+        return LossSmooth.from_params(params, device)
     raise ValueError(f"Wrong equation in Params: {params.equation}")
+
+def norm_from_params(params: Params, device: torch.device) -> Loss:
+    if params.equation == "ad":
+        return NormAD.from_params(params, device)
+    if params.equation == "delta":
+        return NormDelta.from_params(params, device)
+    if params.equation == "smooth":
+        return NormSmooth.from_params(params, device)
+    raise ValueError(f"Wrong equation in Params: {params.equation}")
+
+def nn_error_from_params(params: Params) -> NNError:
+    if params.equation == "ad":
+        return NNErrorAD.from_params(params)
+    if params.equation == "delta":
+        return NNErrorDelta.from_params(params)
+    if params.equation == "smooth":
+        return NNErrorSmooth.from_params(params)
+    raise ValueError(f"Wrong equation in params: {params.equation}") 

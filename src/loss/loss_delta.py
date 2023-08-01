@@ -10,6 +10,7 @@ from src.base_fun import BaseFun, PrecomputedBase, SinBase, precompute_base
 from src.loss.loss import Loss
 from src.pinn import PINN, dfdx, f
 from src.params import Params
+from src.utils import prepare_x
 
 class LossDelta(Loss):
     def __init__(
@@ -31,6 +32,9 @@ class LossDelta(Loss):
 
     # Allows to call object as function
     def __call__(self, pinn: PINN) -> torch.Tensor:
+        return self.pde_loss(pinn) + self.boundary_loss(pinn)
+    
+    def pde_loss(self, pinn: PINN) -> torch.Tensor:
         x = self.x
         eps = self.eps
         Xd = self.Xd
@@ -57,20 +61,25 @@ class LossDelta(Loss):
         final_loss = torch.matmul(torch.matmul(L.T, G), L)
         final_loss = final_loss / self.divider
 
-        boundary_xi = x[0].reshape(-1, 1) #first point = 0
+        return final_loss
+
+    def boundary_loss(self, pinn: PINN) -> torch.Tensor:
+        boundary_xi = self.x[0].reshape(-1, 1) #first point = 0
         boundary_loss_xi = f(pinn, boundary_xi)
 
 
-        boundary_xf = x[-1].reshape(-1, 1) #last point = 1
+        boundary_xf = self.x[-1].reshape(-1, 1) #last point = 1
         boundary_loss_xf = f(pinn, boundary_xf)
-        
-        final_loss+= \
+
+        boundary_loss = \
             (1)*boundary_loss_xi.pow(2).mean() + \
             (1)*boundary_loss_xf.pow(2).mean() 
-        return final_loss
-    
+
+        return boundary_loss
+
     @classmethod
-    def from_params(cls, x: torch.Tensor, params: Params) -> LossDelta:
+    def from_params(cls, params: Params, device: torch.device) -> LossDelta:
+        x = prepare_x(params.n_points_x, device)
         base_fun = BaseFun.from_params(params)
         integration_rule = get_int_rule(params.integration_rule_loss)
         base_x, dx = integration_rule.prepare_x_dx(x)
