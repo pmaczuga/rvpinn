@@ -1,9 +1,12 @@
 import torch
+from src.loss.loss_delta_fem import LossDeltaFem
+from src.loss.loss_ad_fem import LossADFem
+from src.loss.loss_smooth_fem import LossSmoothFem
 from src.loss.loss_smooth import LossSmooth
 from src.loss.loss_delta import LossDelta
 from src.params import Params
 from src.integration import get_int_rule
-from src.base_fun import BaseFun, precompute_base
+from src.base_fun import BaseFun, FemBase, precompute_base, prepare_x_per_base
 from src.loss.loss_ad import LossAD
 from src.utils import prepare_x
 
@@ -46,3 +49,29 @@ class NormSmooth(LossSmooth):
         precomputed_base = precompute_base(base_fun, base_x, 1.0, params.n_test_func)
         return cls(x, precomputed_base, integration_rule, params.divide_by_test)
     
+class NormSmoothFem(LossSmoothFem):
+    @classmethod
+    def from_params(cls, params: Params, device: torch.device) -> LossSmoothFem:
+        base_fun = FemBase(params.n_test_func)
+        gramm_matrix = base_fun.calculate_matrix(params.eps, params.n_test_func)
+        integration_rule = get_int_rule(params.integration_rule_norm)
+        xs = prepare_x_per_base(base_fun, params.n_test_func, params.n_points_error_fem, device)
+        return cls(xs, base_fun, gramm_matrix, params.n_test_func, integration_rule, params.divide_by_test)
+
+class NormADFem(LossADFem):
+    @classmethod
+    def from_params(cls, params: Params, device: torch.device) -> LossADFem:
+        base_fun = FemBase(params.n_test_func)
+        gramm_matrix = base_fun.calculate_matrix(params.eps, params.n_test_func)
+        integration_rule = get_int_rule(params.integration_rule_norm)
+        xs = prepare_x_per_base(base_fun, params.n_test_func, params.n_points_error_fem, device)
+        return cls(xs, params.eps, base_fun, gramm_matrix, params.n_test_func, integration_rule, params.divide_by_test)
+
+class NormDeltaFem(LossDeltaFem):
+    @classmethod
+    def from_params(cls, params: Params, device: torch.device) -> LossDeltaFem:
+        base_fun = FemBase(params.n_test_func)
+        gramm_matrix = base_fun.calculate_matrix(params.eps, params.n_test_func)
+        integration_rule = get_int_rule(params.integration_rule_norm)
+        xs = prepare_x_per_base(base_fun, params.n_test_func, params.n_points_error_fem, device)
+        return cls(xs, params.eps, params.Xd, base_fun, gramm_matrix, params.n_test_func, integration_rule, params.divide_by_test)

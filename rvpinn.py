@@ -33,9 +33,15 @@ parser.add_argument("--compute-error", type=bool, action=argparse.BooleanOptiona
                     help='Whether to compute error in each iteration will influence performance')
 parser.add_argument("--n-points-x", type=int,
                     help='Number of integration nodes')
+parser.add_argument("--n-points-x-fem", type=int,
+                    help='Only FEM base functions. Number of integration nodes per interval where FEM basis is linear')
 parser.add_argument("--n-points-error", type=int,
                     help=('Number of integration nodes for computing error. '
                          'Ideally greater than n_points_x'))
+parser.add_argument("--n-points-error-fem", type=int,
+                    help=('Only FEM base functions. '
+                          'Number of integration nodes per interval where FEM basis is linear '
+                          'for error and norm calculation.'))
 parser.add_argument("--n-test-func", type=int, 
                     help='Number of test functions')
 parser.add_argument("--integration-rule-loss", type=str,

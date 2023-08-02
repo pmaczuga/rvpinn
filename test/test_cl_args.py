@@ -19,7 +19,9 @@ class TestClArgs(unittest.TestCase):
         self.assertEqual(params.Xd, 0.1)
         self.assertEqual(params.compute_error, False)
         self.assertEqual(params.n_points_x, 1)
-        self.assertEqual(params.n_points_error, 1)
+        self.assertEqual(params.n_points_x_fem, 5)
+        self.assertEqual(params.n_points_error, 2)
+        self.assertEqual(params.n_points_error_fem, 6)
         self.assertEqual(params.n_test_func, 1)
         self.assertEqual(params.integration_rule_loss, 'trapz')
         self.assertEqual(params.integration_rule_norm, 'trapz')
@@ -39,7 +41,9 @@ class TestClArgs(unittest.TestCase):
                 '--Xd', '0.42',
                 '--compute-error',
                 '--n-points-x', '42',
+                '--n-points-x-fem', '43',
                 '--n-points-error', '42',
+                '--n-points-error-fem', '43',
                 '--n-test-func', '42',
                 '--integration-rule-loss', 'midpoint',
                 '--integration-rule-norm', 'midpoint',  
@@ -60,7 +64,9 @@ class TestClArgs(unittest.TestCase):
         self.assertEqual(params.Xd, 0.42)
         self.assertEqual(params.compute_error, True)
         self.assertEqual(params.n_points_x, 42)
+        self.assertEqual(params.n_points_x_fem, 43)
         self.assertEqual(params.n_points_error, 42)
+        self.assertEqual(params.n_points_error_fem, 43)
         self.assertEqual(params.n_test_func, 42)
         self.assertEqual(params.integration_rule_loss, 'midpoint')
         self.assertEqual(params.integration_rule_norm, 'midpoint')

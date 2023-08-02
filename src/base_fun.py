@@ -1,6 +1,7 @@
 from __future__ import annotations
 from abc import ABC
 import math
+from typing import List
 
 import torch
 
@@ -78,35 +79,44 @@ class FemBase(BaseFun):
         self.N = N
 
     def __call__(self, x: torch.Tensor, n: int) -> torch.Tensor:
-        left0 = x <= self._tip_x(n-1)
-        left = torch.logical_and(x > self._tip_x(n-1), x <= self._tip_x(n))
-        right = torch.logical_and(x > self._tip_x(n), x <= self._tip_x(n+1))
-        right0 = x > self._tip_x(n+1)
-        left_y =   x * 1.0 / self._delta_x() + 1.0 / self._delta_x() - n + 1
-        right_y = -x * 1.0 / self._delta_x() - 1.0 / self._delta_x() + n + 1
+        left0 = x <= self.tip_x(n-1)
+        left = torch.logical_and(x > self.tip_x(n-1), x <= self.tip_x(n))
+        right = torch.logical_and(x > self.tip_x(n), x <= self.tip_x(n+1))
+        right0 = x > self.tip_x(n+1)
+        left_y =   x * 1.0 / self.delta_x() + 1.0 / self.delta_x() - n + 1
+        right_y = -x * 1.0 / self.delta_x() - 1.0 / self.delta_x() + n + 1
         return left0 * 0.0 + left * left_y + right * right_y + right0 * 0.0
     
     def dx(self, x: torch.Tensor, n: int) -> torch.Tensor:
-        left0 = x <= self._tip_x(n-1)
-        left = torch.logical_and(x > self._tip_x(n-1), x <= self._tip_x(n))
-        right = torch.logical_and(x > self._tip_x(n), x <= self._tip_x(n+1))
-        right0 = x > self._tip_x(n+1)
-        return left0 * 0.0 + left / self._delta_x() - right / self._delta_x() + right0 * 0.0
+        left0 = x <= self.tip_x(n-1)
+        left = torch.logical_and(x > self.tip_x(n-1), x <= self.tip_x(n))
+        right = torch.logical_and(x > self.tip_x(n), x <= self.tip_x(n+1))
+        right0 = x > self.tip_x(n+1)
+        return left0 * 0.0 + left / self.delta_x() - right / self.delta_x() + right0 * 0.0
     
     def calculate_matrix(self, eps: float, n_test_func: int) -> torch.Tensor:
         matrix = torch.zeros(n_test_func, n_test_func)
         for i in range(n_test_func):
-            matrix[i, i] = eps * (1.0 / self._delta_x())**2 * self._delta_x() * 2
+            matrix[i, i] = eps * (1.0 / self.delta_x())**2 * self.delta_x() * 2
         for i in range(n_test_func - 1):
-            matrix[i, i+1] = -1.0 / self._delta_x() * eps
-            matrix[i+1, i] = -1.0 / self._delta_x() * eps
+            matrix[i, i+1] = -1.0 / self.delta_x() * eps
+            matrix[i+1, i] = -1.0 / self.delta_x() * eps
         return torch.inverse(matrix)
     
-    def _tip_x(self, n) -> float:
-        return -1.0 + n*self._delta_x()
+    def tip_x(self, n) -> float:
+        return -1.0 + n*self.delta_x()
     
-    def _delta_x(self) -> float:
+    def delta_x(self) -> float:
         return 2.0/(self.N+1)
+
+def prepare_x_per_base(base_fun: FemBase, n_test_func: int, n_points: int, device: torch.device) -> List[torch.Tensor]:
+    xs = []
+    for i in range(n_test_func + 1):
+        tip_left = base_fun.tip_x(i)
+        tip_right = base_fun.tip_x(i+1)
+        x = torch.linspace(tip_left, tip_right, n_points, requires_grad=True).reshape(-1, 1).to(device)
+        xs.append(x)
+    return xs
 
 class MixedBase(BaseFun):
     def __init__(self, N1: int, N2: int, log=True):
@@ -128,7 +138,7 @@ class MixedBase(BaseFun):
             return self.fem.dx(x, n - self.N1) 
 
     def calculate_matrix(self, eps: float, n_test_func: int) -> torch.Tensor:
-        delta_x = self.fem._delta_x()
+        delta_x = self.fem.delta_x()
         matrix = torch.zeros(n_test_func, n_test_func)
         # sin
         for i in range(n_test_func):
