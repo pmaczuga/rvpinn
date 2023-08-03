@@ -56,7 +56,7 @@ class NormSmoothFem(LossSmoothFem):
         gramm_matrix = base_fun.calculate_matrix(params.eps, params.n_test_func)
         integration_rule = get_int_rule(params.integration_rule_norm)
         xs = prepare_x_per_base(base_fun, params.n_test_func, params.n_points_error_fem, device)
-        return cls(xs, base_fun, gramm_matrix, params.n_test_func, integration_rule, params.divide_by_test)
+        return cls(base_fun, gramm_matrix, params.n_test_func, params.n_points_error_fem, params.divide_by_test)
 
 class NormADFem(LossADFem):
     @classmethod
