@@ -3,6 +3,7 @@ from typing import List
 import numpy as np
 
 import torch
+from src.loss.fem_utils import gauss_weights, prepare_x_for_fem_int
 
 from src.integration import IntegrationRule, get_int_rule
 from src.base_fun import FemBase, prepare_x_per_base
@@ -29,14 +30,11 @@ class LossSmoothFem(Loss):
         self.base_fun = base_fun
         self.gramm_matrix = gramm_matrix
         self.n_test_func = n_test_func
+        self.n_points = n_points_x_fem
         self.divider = n_test_func if divide_by_test else 1.0
-        x, w = np.polynomial.legendre.leggauss(n_points_x_fem)
-        self.x_norm = torch.from_numpy(x).float().reshape(-1, 1).to(gramm_matrix.device)
-        self.x_norm.requires_grad = True
-        self.w = torch.from_numpy(w).float().reshape(-1,1).to(gramm_matrix.device)
+        self.x = prepare_x_for_fem_int(n_test_func, n_points_x_fem, requires_grad=True).reshape(-1, 1).to(gramm_matrix.device)
+        self.w = gauss_weights(self.n_points).reshape(-1, 1).to(gramm_matrix.device)
         self.boundary_x = torch.tensor([-1., 1.], requires_grad=True).to(gramm_matrix.device)
-
-        
 
     # Allows to call object as function
     def __call__(self, pinn: PINN) -> torch.Tensor:
@@ -45,22 +43,29 @@ class LossSmoothFem(Loss):
     def pde_loss(self, pinn: PINN) -> torch.Tensor:
         base_fun = self.base_fun
         n_test_func = self.n_test_func
+        n_points = self.n_points
         device = pinn.get_device()
         
         L = torch.zeros(n_test_func)
+
+        val = dfdx(pinn, self.x, order=1)
+        rhs = torch.pi**2 * torch.sin(torch.pi * (self.x+1))
 
         for n in range(1, n_test_func + 1):
             l = base_fun.tip_x(n-1)
             m = base_fun.tip_x(n)
             r = base_fun.tip_x(n+1)
 
-            x_left  = self.x_norm * (m-l)/2 + (m+l)/2
-            x_right = self.x_norm * (r-m)/2 + (r+m)/2
+            l_i = (n-1) * n_points
+            m_i = (n) * n_points
+            r_i = (n+1) * n_points
+            x_left  = self.x[l_i:m_i]
+            x_right = self.x[m_i:r_i]
 
-            val_left = dfdx(pinn, x_left, order=1) 
-            rhs_left = torch.pi**2 * torch.sin(torch.pi * (x_left+1))
-            val_right = dfdx(pinn, x_right, order=1) 
-            rhs_right = torch.pi**2 * torch.sin(torch.pi * (x_right+1))
+            val_left = val[l_i:m_i]
+            rhs_left = rhs[l_i:m_i]
+            val_right = val[m_i:r_i]
+            rhs_right = rhs[m_i:r_i]
 
             base_left  = base_fun(x_left,  n)
             base_right = base_fun(x_right, n)

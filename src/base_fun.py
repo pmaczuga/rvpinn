@@ -79,21 +79,35 @@ class FemBase(BaseFun):
         self.N = N
 
     def __call__(self, x: torch.Tensor, n: int) -> torch.Tensor:
-        left0 = x <= self.tip_x(n-1)
-        left = torch.logical_and(x > self.tip_x(n-1), x <= self.tip_x(n))
-        right = torch.logical_and(x > self.tip_x(n), x <= self.tip_x(n+1))
-        right0 = x > self.tip_x(n+1)
-        left_y =   x * 1.0 / self.delta_x() + 1.0 / self.delta_x() - n + 1
-        right_y = -x * 1.0 / self.delta_x() - 1.0 / self.delta_x() + n + 1
-        return left0 * 0.0 + left * left_y + right * right_y + right0 * 0.0
+        left_x0 = x <= self.tip_x(n-1)
+        left_x = torch.logical_and(x > self.tip_x(n-1), x <= self.tip_x(n))
+        right_x = torch.logical_and(x > self.tip_x(n), x <= self.tip_x(n+1))
+        right_x0 = x > self.tip_x(n+1)
+        left =  self.left(x, n)
+        right = self.right(x, n)
+        return left_x0 * 0.0 + left_x * left + right_x * right + right_x0 * 0.0
     
+    def left(self, x: torch.Tensor, n: int) -> torch.Tensor:
+        return x * 1.0 / self.delta_x() + 1.0 / self.delta_x() - n + 1
+    
+    def right(self, x: torch.Tensor, n: int) -> torch.Tensor:
+        return -x * 1.0 / self.delta_x() - 1.0 / self.delta_x() + n + 1
+
     def dx(self, x: torch.Tensor, n: int) -> torch.Tensor:
-        left0 = x <= self.tip_x(n-1)
-        left = torch.logical_and(x > self.tip_x(n-1), x <= self.tip_x(n))
-        right = torch.logical_and(x > self.tip_x(n), x <= self.tip_x(n+1))
-        right0 = x > self.tip_x(n+1)
-        return left0 * 0.0 + left / self.delta_x() - right / self.delta_x() + right0 * 0.0
+        left_x0 = x <= self.tip_x(n-1)
+        left_x = torch.logical_and(x > self.tip_x(n-1), x <= self.tip_x(n))
+        right_x = torch.logical_and(x > self.tip_x(n), x <= self.tip_x(n+1))
+        right_x0 = x > self.tip_x(n+1)
+        left = self.dx_left(x, n)
+        right = self.dx_right(x, n)
+        return left_x0 * 0.0 + left_x * left + right_x * right + right_x0 * 0.0
     
+    def dx_left(self, x: torch.Tensor, n: int) -> torch.Tensor:
+        return x * 0.0 + 1.0 / self.delta_x()
+
+    def dx_right(self, x: torch.Tensor, n: int) -> torch.Tensor:
+        return x * 0.0 - 1.0 / self.delta_x()
+
     def calculate_matrix(self, eps: float, n_test_func: int) -> torch.Tensor:
         matrix = torch.zeros(n_test_func, n_test_func)
         for i in range(n_test_func):
