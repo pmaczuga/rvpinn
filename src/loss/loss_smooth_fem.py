@@ -1,12 +1,9 @@
 from __future__ import annotations
-from typing import List
-import numpy as np
 
 import torch
 from src.loss.fem_utils import gauss_weights, prepare_x_for_fem_int
 
-from src.integration import IntegrationRule, get_int_rule
-from src.base_fun import FemBase, prepare_x_per_base
+from src.base_fun import FemBase
 from src.loss.loss import Loss
 from src.pinn import PINN, dfdx, f
 from src.params import Params

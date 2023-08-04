@@ -45,10 +45,12 @@ parser.add_argument("--n-points-error-fem", type=int,
 parser.add_argument("--n-test-func", type=int, 
                     help='Number of test functions')
 parser.add_argument("--integration-rule-loss", type=str,
-                    help='Integration rule for loss function. '
+                    help='Integration rule for loss function. Is ignored for FEM test functions, '
+                         'Gaussian quadrature is always used in this case.'
                          'Either "trapz" or "midpoint.')
 parser.add_argument("--integration-rule-norm", type=str,
-                    help='Integration rule for calculating norm. '
+                    help='Integration rule for calculating norm. Is ignored for FEM test functions, '
+                         'Gaussian quadrature is always used in this case.'
                     'One of "trapz", "midpoint" or "simpson".')
 parser.add_argument("--integration-rule-error", type=str,
                     help='Integration rule for calculating error. ' 

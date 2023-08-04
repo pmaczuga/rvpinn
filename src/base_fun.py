@@ -123,14 +123,6 @@ class FemBase(BaseFun):
     def delta_x(self) -> float:
         return 2.0/(self.N+1)
 
-def prepare_x_per_base(base_fun: FemBase, n_test_func: int, n_points: int, device: torch.device) -> List[torch.Tensor]:
-    xs = []
-    for i in range(n_test_func + 1):
-        tip_left = base_fun.tip_x(i)
-        tip_right = base_fun.tip_x(i+1)
-        x = torch.linspace(tip_left, tip_right, n_points, requires_grad=True).reshape(-1, 1).to(device)
-        xs.append(x)
-    return xs
 
 class MixedBase(BaseFun):
     def __init__(self, N1: int, N2: int, log=True):

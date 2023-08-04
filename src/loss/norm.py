@@ -6,7 +6,7 @@ from src.loss.loss_smooth import LossSmooth
 from src.loss.loss_delta import LossDelta
 from src.params import Params
 from src.integration import get_int_rule
-from src.base_fun import BaseFun, FemBase, precompute_base, prepare_x_per_base
+from src.base_fun import BaseFun, FemBase, precompute_base
 from src.loss.loss_ad import LossAD
 from src.utils import prepare_x
 
@@ -55,7 +55,6 @@ class NormSmoothFem(LossSmoothFem):
         base_fun = FemBase(params.n_test_func)
         gramm_matrix = base_fun.calculate_matrix(params.eps, params.n_test_func)
         integration_rule = get_int_rule(params.integration_rule_norm)
-        xs = prepare_x_per_base(base_fun, params.n_test_func, params.n_points_error_fem, device)
         return cls(base_fun, gramm_matrix, params.n_test_func, params.n_points_error_fem, params.divide_by_test)
 
 class NormADFem(LossADFem):
@@ -63,15 +62,11 @@ class NormADFem(LossADFem):
     def from_params(cls, params: Params, device: torch.device) -> LossADFem:
         base_fun = FemBase(params.n_test_func)
         gramm_matrix = base_fun.calculate_matrix(params.eps, params.n_test_func)
-        integration_rule = get_int_rule(params.integration_rule_norm)
-        xs = prepare_x_per_base(base_fun, params.n_test_func, params.n_points_error_fem, device)
-        return cls(xs, params.eps, base_fun, gramm_matrix, params.n_test_func, integration_rule, params.divide_by_test)
+        return cls(params.eps, base_fun, gramm_matrix, params.n_test_func, params.n_points_error_fem, params.divide_by_test)
 
 class NormDeltaFem(LossDeltaFem):
     @classmethod
     def from_params(cls, params: Params, device: torch.device) -> LossDeltaFem:
         base_fun = FemBase(params.n_test_func)
         gramm_matrix = base_fun.calculate_matrix(params.eps, params.n_test_func)
-        integration_rule = get_int_rule(params.integration_rule_norm)
-        xs = prepare_x_per_base(base_fun, params.n_test_func, params.n_points_error_fem, device)
-        return cls(xs, params.eps, params.Xd, base_fun, gramm_matrix, params.n_test_func, integration_rule, params.divide_by_test)
+        return cls(params.eps, params.Xd, base_fun, gramm_matrix, params.n_test_func, params.n_points_error_fem, params.divide_by_test)
