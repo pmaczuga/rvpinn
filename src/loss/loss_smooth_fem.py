@@ -32,7 +32,9 @@ class LossSmoothFem(Loss):
         self.n_test_func = n_test_func
         self.n_points = n_points_x_fem
         self.divider = n_test_func if divide_by_test else 1.0
+        # x's for each interval from gaussian quadrature concatenated together 
         self.x = prepare_x_for_fem_int(n_test_func, n_points_x_fem, requires_grad=True).reshape(-1, 1).to(gramm_matrix.device)
+        # weights for gaussian quadrature for SINGLE interval
         self.w = gauss_weights(self.n_points).reshape(-1, 1).to(gramm_matrix.device)
         self.boundary_x = torch.tensor([-1., 1.], requires_grad=True).to(gramm_matrix.device)
 
@@ -67,10 +69,10 @@ class LossSmoothFem(Loss):
             val_right = val[m_i:r_i]
             rhs_right = rhs[m_i:r_i]
 
-            base_left  = base_fun(x_left,  n)
-            base_right = base_fun(x_right, n)
-            base_dx_left  = 0.0 * x_left  + 1.0 / base_fun.delta_x()
-            base_dx_right = 0.0 * x_right - 1.0 / base_fun.delta_x()
+            base_left  = base_fun.left(x_left,  n)
+            base_right = base_fun.right(x_right, n)
+            base_dx_left  = base_fun.dx_left(x_left, n)
+            base_dx_right = base_fun.dx_right(x_right, n)
 
             inte1_left = val_left.mul(base_dx_left)
             inte1_right = val_right.mul(base_dx_right)
